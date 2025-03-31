@@ -275,6 +275,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (!isPaused) {
             updatePlayerMove(delta);
             mapManager.setCameraValues(cameraX, cameraY);
+        }
 
         if (System.currentTimeMillis() - lastDirChange >= 3000) {
             skeletonDir = random.nextInt(4);
@@ -432,9 +433,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         // If not paused and not pressing pause button, handle normal game touch events
-        if (!isPaused) {
-            return touchEvents.touchEvent(event);
-        }
+//        if (!isPaused) {
+//            return touchEvents.touchEvent(event);
+//        }
 
         return true;
     }
