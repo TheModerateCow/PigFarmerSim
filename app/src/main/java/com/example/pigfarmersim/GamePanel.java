@@ -11,7 +11,9 @@ import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
 
+import com.example.pigfarmersim.entities.Customer;
 import com.example.pigfarmersim.entities.GameCharacters;
+import com.example.pigfarmersim.entities.Table;
 import com.example.pigfarmersim.environments.MapManager;
 import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.inputs.TouchEvents;
@@ -37,6 +39,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final PointF skeletonPos;
     private int skeletonDir = GameConstants.Face_Dir.DOWN;
     private long lastDirChange = System.currentTimeMillis();
+    private int customerDir = GameConstants.Face_Dir.DOWN;
+    private int customerFrame = 0;
+    private long frameTime = System.currentTimeMillis();
     private int playerAniIndexY, playerFaceDir = GameConstants.Face_Dir.RIGHT;
     private int aniTick;
     private int aniSpeed = 10;
@@ -69,6 +74,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         c.drawBitmap(GameCharacters.PLAYER.getSprite(playerAniIndexY, playerFaceDir), playerX, playerY, null);
         c.drawBitmap(GameCharacters.SKELETON.getSprite(playerAniIndexY, skeletonDir), skeletonPos.x + cameraX, skeletonPos.y + cameraY, null);
+        c.drawBitmap(Customer.NEW_CUSTOMER.getSprite(customerDir, customerFrame), 32 + playerX + cameraX, 32 + playerY+ cameraY, null);
+        c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
 
         holder.unlockCanvasAndPost(c);
     }
@@ -80,6 +87,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (System.currentTimeMillis() - lastDirChange >= 3000) {
             skeletonDir = random.nextInt(4);
             lastDirChange = System.currentTimeMillis();
+            customerDir = (customerDir + 1) % 4;
+        }
+
+        if (System.currentTimeMillis() - frameTime >= 1000) {
+            customerFrame = (customerFrame + 1) % 4;
+            frameTime = System.currentTimeMillis();
         }
 
         switch (skeletonDir) {
