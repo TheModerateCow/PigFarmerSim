@@ -5,12 +5,14 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
     private static Context gameContext;
+    private static GamePanel gamePanel;
     public static int GAME_WIDTH, GAME_HEIGHT;
 
     @Override
@@ -39,6 +41,29 @@ public class MainActivity extends AppCompatActivity {
         setContentView(new GamePanel(this));
     }
 
+    public void finishGame() {
+        if (gamePanel != null) {
+            // Clean up resources
+            gamePanel.setPaused(true);
+            if (gamePanel.getGameLoop() != null) {
+                gamePanel.getGameLoop().stopGameLoop();
+            }
+        }
+
+        Intent intent = new Intent(this, MainPageActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear the activity stack
+        startActivity(intent);
+        finish();  // This will close the current activity
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (gamePanel != null) {
+            gamePanel.setPaused(true);
+        }
+        // Any other cleanup
+    }
     public static Context getGameContext() {
         return gameContext;
     }

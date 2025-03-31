@@ -2,9 +2,13 @@ package com.example.pigfarmersim;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PointF;
+import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -47,6 +51,26 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private int aniSpeed = 10;
     private MapManager mapManager;
 
+    // Pause button and menu elements
+    private boolean isPaused = false;
+    private final RectF pauseButton;
+    private final Paint pauseButtonPaint;
+    private final Paint pauseIconPaint;
+    private final Paint overlayPaint;
+    private final Paint menuPaint;
+    private final Paint buttonPaint;
+    private final Paint buttonTextPaint;
+    private final RectF resumeButton;
+    private final RectF quitButton;
+    private boolean showEndScreen = false;
+    private final Paint endOverlayPaint;
+    private final Paint endScreenBgPaint;
+    private final Paint titleTextPaint;
+    private final Paint scoreTextPaint;
+    private final Paint endButtonTextPaint;
+    private final RectF endScreenBgRect;
+    private final RectF menuButtonRect;
+    private final RectF endGameButton;
 
     /**
      * Constructs a new GamePanel with the specified context.
@@ -62,8 +86,94 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         mapManager = new MapManager();
 
         skeletonPos = new PointF((random.nextInt(MainActivity.GAME_WIDTH)), (random.nextInt(MainActivity.GAME_HEIGHT)));
+
+        // Initialize pause button
+        pauseButton = new RectF(MainActivity.GAME_WIDTH - 100, 20, MainActivity.GAME_WIDTH - 20, 100);
+        pauseButtonPaint = new Paint();
+        pauseButtonPaint.setColor(Color.LTGRAY);
+        pauseButtonPaint.setAlpha(180);
+
+        pauseIconPaint = new Paint();
+        pauseIconPaint.setColor(Color.WHITE);
+        pauseIconPaint.setStyle(Paint.Style.FILL);
+
+        // Initialize pause menu overlay
+        overlayPaint = new Paint();
+        overlayPaint.setColor(Color.BLACK);
+        overlayPaint.setAlpha(128); // 50% opacity
+
+        menuPaint = new Paint();
+        menuPaint.setColor(Color.DKGRAY);
+        menuPaint.setAlpha(230);
+
+        buttonPaint = new Paint();
+        buttonPaint.setColor(Color.LTGRAY);
+
+        buttonTextPaint = new Paint();
+        buttonTextPaint.setColor(Color.BLACK);
+        buttonTextPaint.setTextSize(50);
+        buttonTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        // Menu buttons
+        int buttonWidth = 300;
+        int buttonHeight = 100;
+        int centerX = MainActivity.GAME_WIDTH / 2;
+        int centerY = MainActivity.GAME_HEIGHT / 2;
+
+        resumeButton = new RectF(centerX - buttonWidth/2, centerY - buttonHeight - 20,
+                centerX + buttonWidth/2, centerY - 20);
+        quitButton = new RectF(centerX - buttonWidth/2, centerY + 20,
+                centerX + buttonWidth/2, centerY + buttonHeight + 20);
+
+        // Overlay paint (semi-transparent black)
+        endOverlayPaint = new Paint();
+        endOverlayPaint.setColor(Color.argb(180, 0, 0, 0)); // 180/255 transparency
+
+        // End screen background
+        endScreenBgPaint = new Paint();
+        endScreenBgPaint.setColor(Color.argb(220, 30, 30, 40)); // Dark bluish-gray
+        endScreenBgPaint.setStyle(Paint.Style.FILL);
+
+        // Text paints
+        titleTextPaint = new Paint();
+        titleTextPaint.setColor(Color.WHITE);
+        titleTextPaint.setTextSize(120);
+        titleTextPaint.setTextAlign(Paint.Align.CENTER);
+        titleTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+
+        scoreTextPaint = new Paint();
+        scoreTextPaint.setColor(Color.YELLOW);
+        scoreTextPaint.setTextSize(80);
+        scoreTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        endButtonTextPaint = new Paint();
+        endButtonTextPaint.setColor(Color.BLACK);
+        endButtonTextPaint.setTextSize(60);
+        endButtonTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        // Calculate positions for end screen elements
+        int endCenterX = MainActivity.GAME_WIDTH / 2;
+        int endCenterY = MainActivity.GAME_HEIGHT / 2;
+
+        // End screen background rectangle
+        endScreenBgRect = new RectF(
+                centerX - 400, centerY - 300,
+                centerX + 400, centerY + 300
+        );
+
+        // Menu button rectangle
+        menuButtonRect = new RectF(
+                centerX - 200, centerY + 150,
+                centerX + 200, centerY + 250
+        );
+
+        endGameButton = new RectF(centerX - buttonWidth/2, centerY + buttonHeight + 60,
+                centerX + buttonWidth/2, centerY + 2*buttonHeight + 60);
     }
 
+    public GameLoop getGameLoop() {
+        return gameLoop;
+    }
     public void render() {
         Canvas c = holder.lockCanvas();
         c.drawColor(Color.BLACK);
@@ -77,12 +187,94 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         c.drawBitmap(Customer.NEW_CUSTOMER.getSprite(customerDir, customerFrame), 32 + playerX + cameraX, 32 + playerY+ cameraY, null);
         c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
 
+        // Draw pause button
+        c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
+
+        // Draw pause icon (two vertical bars)
+        float barWidth = 12;
+        float pauseIconLeft = pauseButton.left + (pauseButton.width() - 2 * barWidth - 10) / 2;
+        float pauseIconTop = pauseButton.top + pauseButton.height() * 0.25f;
+        float pauseIconBottom = pauseButton.bottom - pauseButton.height() * 0.25f;
+
+        c.drawRect(pauseIconLeft, pauseIconTop, pauseIconLeft + barWidth, pauseIconBottom, pauseIconPaint);
+        c.drawRect(pauseIconLeft + barWidth + 10, pauseIconTop, pauseIconLeft + 2 * barWidth + 10, pauseIconBottom, pauseIconPaint);
+
+        // Draw pause menu if paused
+        if (isPaused && !showEndScreen) {
+            // Draw semi-transparent overlay
+            c.drawRect(0, 0, MainActivity.GAME_WIDTH, MainActivity.GAME_HEIGHT, overlayPaint);
+
+            // Draw menu background
+            float menuWidth = MainActivity.GAME_WIDTH * 0.7f;
+            float menuHeight = MainActivity.GAME_HEIGHT * 0.5f;
+            float menuLeft = (MainActivity.GAME_WIDTH - menuWidth) / 2;
+            float menuTop = (MainActivity.GAME_HEIGHT - menuHeight) / 2;
+            RectF menuRect = new RectF(menuLeft, menuTop, menuLeft + menuWidth, menuTop + menuHeight);
+            c.drawRoundRect(menuRect, 20, 20, menuPaint);
+
+            // Draw "PAUSED" text
+            Paint titlePaint = new Paint();
+            titlePaint.setColor(Color.WHITE);
+            titlePaint.setTextSize(70);
+            titlePaint.setTextAlign(Paint.Align.CENTER);
+            c.drawText("PAUSED", MainActivity.GAME_WIDTH / 2, menuTop + 100, titlePaint);
+
+            // Draw buttons
+            c.drawRoundRect(resumeButton, 15, 15, buttonPaint);
+            c.drawRoundRect(quitButton, 15, 15, buttonPaint);
+
+            // Draw button text
+            float textY = resumeButton.centerY() + 15; // Adjust for text vertical centering
+            c.drawText("RESUME", resumeButton.centerX(), textY, buttonTextPaint);
+            c.drawText("QUIT", quitButton.centerX(), quitButton.centerY() + 15, buttonTextPaint);
+
+            // Add End Game button
+            c.drawRoundRect(endGameButton, 15, 15, buttonPaint);
+            c.drawText("END GAME", endGameButton.centerX(), endGameButton.centerY() + 15, buttonTextPaint);
+        }
+
+        if (showEndScreen) {
+            // Draw translucent overlay
+            c.drawRect(0, 0, MainActivity.GAME_WIDTH, MainActivity.GAME_HEIGHT, endOverlayPaint);
+
+            // Draw end screen background
+            c.drawRoundRect(endScreenBgRect, 30, 30, endScreenBgPaint);
+
+            // Draw title
+            c.drawText("GAME OVER",
+                    MainActivity.GAME_WIDTH / 2,
+                    endScreenBgRect.top + 150,
+                    titleTextPaint);
+
+            // Draw score
+            c.drawText("YOUR SCORE",
+                    MainActivity.GAME_WIDTH / 2,
+                    endScreenBgRect.top + 250,
+                    scoreTextPaint);
+            c.drawText(String.valueOf(0),
+                    MainActivity.GAME_WIDTH / 2,
+                    endScreenBgRect.top + 350,
+                    scoreTextPaint);
+
+            // Draw menu button
+            Paint buttonPaint = new Paint();
+            buttonPaint.setColor(Color.LTGRAY);
+            buttonPaint.setStyle(Paint.Style.FILL);
+            c.drawRoundRect(menuButtonRect, 20, 20, buttonPaint);
+            c.drawText("MAIN MENU",
+                    menuButtonRect.centerX(),
+                    menuButtonRect.centerY() + 20,
+                    endButtonTextPaint);
+        }
+
         holder.unlockCanvasAndPost(c);
     }
 
     public void update(double delta) {
-        updatePlayerMove(delta);
-        mapManager.setCameraValues(cameraX, cameraY);
+        // Only update game state if not paused
+        if (!isPaused) {
+            updatePlayerMove(delta);
+            mapManager.setCameraValues(cameraX, cameraY);
 
         if (System.currentTimeMillis() - lastDirChange >= 3000) {
             skeletonDir = random.nextInt(4);
@@ -200,6 +392,50 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        if (showEndScreen && event.getAction() == MotionEvent.ACTION_DOWN) {
+            float x = event.getX();
+            float y = event.getY();
+
+            if (menuButtonRect.contains(x, y)) {
+                returnToMainMenu();
+                return true;
+            }
+        }
+        // If paused, handle pause menu touch events
+        if (isPaused && !showEndScreen && event.getAction() == MotionEvent.ACTION_DOWN) {
+            float touchX = event.getX();
+            float touchY = event.getY();
+
+            if (resumeButton.contains(touchX, touchY)) {
+                isPaused = false;
+                return true;
+            } else if (quitButton.contains(touchX, touchY)) {
+                // Quit to main menu
+                returnToMainMenu();
+                return true;
+            } else if (endGameButton.contains(touchX, touchY)) {
+                showEndScreen();
+                return true;
+            }
+            return true;
+        }
+
+        // Check for pause button press
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            float touchX = event.getX();
+            float touchY = event.getY();
+
+            if (pauseButton.contains(touchX, touchY)) {
+                isPaused = true;
+                return true;
+            }
+        }
+
+        // If not paused and not pressing pause button, handle normal game touch events
+        if (!isPaused) {
+            return touchEvents.touchEvent(event);
+        }
+
         return true;
     }
 
@@ -253,5 +489,33 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void resetAnimation() {
         aniTick = 0;
         playerAniIndexY = 0;
+    }
+
+    public boolean isPaused() {
+        return isPaused;
+    }
+
+    public void setPaused(boolean paused) {
+        isPaused = paused;
+    }
+
+    public void showEndScreen() {
+        showEndScreen = true;
+        isPaused = true;
+        if (gameLoop != null) {
+            gameLoop.stopGameLoop();
+        }
+    }
+
+    public void returnToMainMenu() {
+        Context context = getContext();
+        if (context instanceof MainActivity) {
+            ((MainActivity) context).finishGame();
+        }
+    }
+
+    public void gameOver() {
+        showEndScreen();
+        // You might want to save the score here
     }
 }
