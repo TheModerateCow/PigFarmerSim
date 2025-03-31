@@ -23,12 +23,18 @@ public enum GameCharacters implements BitmapMethods {
         spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
         for (int j = 0; j < sprites.length; j++)
             for (int i = 0; i < sprites[j].length; i++)
-                sprites[j][i] = getScaledBitmap(Bitmap.createBitmap(spriteSheet, GameConstants.Sprite.DEFAULT_SIZE * i, GameConstants.Sprite.DEFAULT_SIZE * j, GameConstants.Sprite.DEFAULT_SIZE, GameConstants.Sprite.DEFAULT_SIZE));
+                sprites[j][i] = getScaledCharacterBitmap(Bitmap.createBitmap(
+                        spriteSheet,
+                        GameConstants.Sprite.DEFAULT_SIZE * i,
+                        GameConstants.Sprite.DEFAULT_SIZE * j,
+                        GameConstants.Sprite.DEFAULT_SIZE,
+                        GameConstants.Sprite.DEFAULT_SIZE
+                ));
     }
 
-    public Bitmap getSpriteSheet() {
-        return spriteSheet;
-    }
+//    public Bitmap getSpriteSheet() {
+//        return spriteSheet;
+//    }
 
     public Bitmap getSprite(int yPos, int xPos) {
         return sprites[yPos][xPos];

@@ -35,41 +35,41 @@ public class TouchEvents {
         }
     }
 
-    public boolean touchEvent(MotionEvent event) {
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN -> {
-                float x = event.getX();
-                float y = event.getY();
-
-                float a = Math.abs(x - xCenter);
-                float b = Math.abs(y - yCenter);
-                float c = (float) Math.hypot(a, b);
-
-                if (c <= radius) {
-                    System.out.println("Inside!");
-                    touchDown = true;
-                    xTouch = x;
-                    yTouch = y;
-                }
-            }
-            case MotionEvent.ACTION_MOVE -> {
-                if (touchDown) {
-                    xTouch = event.getX();
-                    yTouch = event.getY();
-
-                    float xDiff = xTouch - xCenter;
-                    float yDiff = yTouch - yCenter;
-
-                    gamePanel.setPlayerMoveTrue(new PointF(xDiff, yDiff));
-                }
-
-            }
-
-            case MotionEvent.ACTION_UP -> {
-                touchDown = false;
-                gamePanel.setPlayerMoveFalse();
-            }
-        }
-        return true;
-    }
+//    public boolean touchEvent(MotionEvent event) {
+//        switch (event.getAction()) {
+//            case MotionEvent.ACTION_DOWN -> {
+//                float x = event.getX();
+//                float y = event.getY();
+//
+//                float a = Math.abs(x - xCenter);
+//                float b = Math.abs(y - yCenter);
+//                float c = (float) Math.hypot(a, b);
+//
+//                if (c <= radius) {
+//                    System.out.println("Inside!");
+//                    touchDown = true;
+//                    xTouch = x;
+//                    yTouch = y;
+//                }
+//            }
+//            case MotionEvent.ACTION_MOVE -> {
+//                if (touchDown) {
+//                    xTouch = event.getX();
+//                    yTouch = event.getY();
+//
+//                    float xDiff = xTouch - xCenter;
+//                    float yDiff = yTouch - yCenter;
+//
+//                    gamePanel.setPlayerMoveTrue(new PointF(xDiff, yDiff));
+//                }
+//
+//            }
+//
+//            case MotionEvent.ACTION_UP -> {
+//                touchDown = false;
+//                gamePanel.setPlayerMoveFalse();
+//            }
+//        }
+//        return true;
+//    }
 }

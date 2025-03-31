@@ -187,7 +187,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        return touchEvents.touchEvent(event);
+        return true;
     }
 
     /**
