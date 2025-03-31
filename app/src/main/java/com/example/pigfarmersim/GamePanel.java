@@ -23,6 +23,7 @@ import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.inputs.TouchEvents;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -186,6 +187,38 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         c.drawBitmap(GameCharacters.SKELETON.getSprite(playerAniIndexY, skeletonDir), skeletonPos.x + cameraX, skeletonPos.y + cameraY, null);
         c.drawBitmap(Customer.NEW_CUSTOMER.getSprite(customerDir, customerFrame), 32 + playerX + cameraX, 32 + playerY+ cameraY, null);
         c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
+
+        // Starting coordinates (adjust as needed)
+        float startX = 100f;
+        float startY = 350f;
+
+        // Spacing between tables (adjust as needed)
+        float spacingX = 185f;
+        float spacingY = 150f;
+
+        class Point {
+            private float x;
+            private float y;
+
+            public Point (float x, float y) {
+                this.x = x;
+                this.y = y;
+            }
+
+
+        }
+
+        List<Point> positions = new ArrayList<>();
+
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 12; col++) {
+                float x = startX + col * spacingX;
+                float y = startY + row * spacingY;
+                positions.add(new Point(x, y));
+            }
+        }
+
+        for (Point pos : positions) { c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null); }
 
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
@@ -412,9 +445,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             } else if (quitButton.contains(touchX, touchY)) {
                 // Quit to main menu
+                gameLoop.running = false;
                 returnToMainMenu();
                 return true;
             } else if (endGameButton.contains(touchX, touchY)) {
+                gameLoop.running = false;
                 showEndScreen();
                 return true;
             }
@@ -431,12 +466,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
         }
-
-        // If not paused and not pressing pause button, handle normal game touch events
-//        if (!isPaused) {
-//            return touchEvents.touchEvent(event);
-//        }
-
         return true;
     }
 

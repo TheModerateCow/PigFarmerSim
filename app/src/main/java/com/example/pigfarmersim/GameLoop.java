@@ -3,7 +3,7 @@ package com.example.pigfarmersim;
 public class GameLoop implements Runnable {
     private Thread gameThread;
     private GamePanel gamePanel;
-    private volatile boolean running = false; // Added running flag
+    public volatile boolean running = false; // Added running flag
 
     public GameLoop(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
@@ -19,7 +19,7 @@ public class GameLoop implements Runnable {
         long lastDelta = System.nanoTime();
         long nanoSec = 1_000_000_000;
 
-        while (true) {
+        while (running) {
 
             long nowDelta = System.nanoTime();
             double timeSinceLastDelta = nowDelta - lastDelta;

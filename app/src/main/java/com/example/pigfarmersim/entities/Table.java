@@ -19,5 +19,7 @@ public enum Table implements BitmapMethods{
         sprite = getScaledCharacterBitmap(Bitmap.createBitmap(spriteSheet, 0, 0, GameConstants.Sprite.DEFAULT_SIZE, GameConstants.Sprite.DEFAULT_SIZE));
     }
 
+
+
     public Bitmap getSprite() { return sprite; }
 }
