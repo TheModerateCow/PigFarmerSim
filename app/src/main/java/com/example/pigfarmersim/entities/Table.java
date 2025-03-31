@@ -16,7 +16,7 @@ public enum Table implements BitmapMethods{
 
     Table(int resID) {
         Bitmap spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
-        sprite = getScaledBitmap(Bitmap.createBitmap(spriteSheet, 0, 0, GameConstants.Sprite.DEFAULT_SIZE, GameConstants.Sprite.DEFAULT_SIZE));
+        sprite = getScaledCharacterBitmap(Bitmap.createBitmap(spriteSheet, 0, 0, GameConstants.Sprite.DEFAULT_SIZE, GameConstants.Sprite.DEFAULT_SIZE));
     }
 
     public Bitmap getSprite() { return sprite; }
