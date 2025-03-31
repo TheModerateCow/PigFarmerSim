@@ -12,6 +12,7 @@ public enum Floor implements BitmapMethods {
 
     OUTSIDE(R.drawable.tileset_floor, 22, 26);
 
+
     private Bitmap[] sprites;
 
     Floor(int resID, int tilesInWidth, int tilesInHeight) {
@@ -23,7 +24,7 @@ public enum Floor implements BitmapMethods {
                 int index = j * tilesInWidth + i;
                 sprites[index] = getScaledBitmap(Bitmap.createBitmap(spriteSheet, GameConstants.Sprite.DEFAULT_SIZE * i, GameConstants.Sprite.DEFAULT_SIZE * j, GameConstants.Sprite.DEFAULT_SIZE, GameConstants.Sprite.DEFAULT_SIZE));
             }
-
+        System.out.println();
     }
 
     public Bitmap getSprite(int id){
