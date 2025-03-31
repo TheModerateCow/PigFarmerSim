@@ -3,6 +3,7 @@ package com.example.pigfarmersim;
 public class GameLoop implements Runnable {
     private Thread gameThread;
     private GamePanel gamePanel;
+    private volatile boolean running = false; // Added running flag
 
     public GameLoop(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
@@ -41,6 +42,22 @@ public class GameLoop implements Runnable {
     }
 
     public void startGameLoop() {
-        gameThread.start();
+        if (!running) {
+            running = true;
+            gameThread = new Thread(this);
+            gameThread.start();
+        }
+    }
+
+    public void stopGameLoop() {
+        running = false;  // Assuming you have a 'running' boolean flag
+        // Wait for the thread to finish
+        try {
+            if (gameThread != null) {
+                gameThread.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
