@@ -41,6 +41,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private float playerX = (float) MainActivity.GAME_WIDTH / 2, playerY = (float) MainActivity.GAME_HEIGHT / 2;
     private float cameraX, cameraY;
     private ArrayList<PointF> skeletons = new ArrayList<>();
+    private List<PointF> table_pos = new ArrayList<>();
+    private List<PointF> cust_pos = new ArrayList<>();
+    private int table_idx = 0;
     private final PointF skeletonPos;
     private int skeletonDir = GameConstants.Face_Dir.DOWN;
     private long lastDirChange = System.currentTimeMillis();
@@ -51,6 +54,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private int aniTick;
     private int aniSpeed = 10;
     private MapManager mapManager;
+
+    private ArrayList<PointF> customer_queue = new ArrayList<>();
 
     // Pause button and menu elements
     private boolean isPaused = false;
@@ -72,6 +77,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final RectF endScreenBgRect;
     private final RectF menuButtonRect;
     private final RectF endGameButton;
+
+    // Add these state constants near the top of GamePanel class
+    private static final int STATE_IDLE = 0;
+    private static final int STATE_MOVING_TO_TABLE = 1; // Example state
+    private static final int STATE_ORDERING = 2;        // Example state
+    private static final int STATE_MOVING_TO_WAIT_AREA = 3;
+    private static final int STATE_WAITING_IO = 4;
+    private static final int STATE_MOVING_FROM_WAIT_AREA = 5;
+    private static final int STATE_LEAVING = 6;         // Example state
+
 
     /**
      * Constructs a new GamePanel with the specified context.
@@ -185,8 +200,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         c.drawBitmap(GameCharacters.PLAYER.getSprite(playerAniIndexY, playerFaceDir), playerX, playerY, null);
         c.drawBitmap(GameCharacters.SKELETON.getSprite(playerAniIndexY, skeletonDir), skeletonPos.x + cameraX, skeletonPos.y + cameraY, null);
-        c.drawBitmap(Customer.NEW_CUSTOMER.getSprite(customerDir, customerFrame), 32 + playerX + cameraX, 32 + playerY+ cameraY, null);
-        c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
+//        c.drawBitmap(Customer.NEW_CUSTOMER.getSprite(customerDir, customerFrame), 32 + playerX + cameraX, 32 + playerY+ cameraY, null);
+//        c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
+        for (int i = 0; i < 5; i++) {
+            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), 32 + playerX + cameraX + 100 * i , 32 + playerY+ cameraY, null);
+            cust_pos.add(new PointF(32 + playerX + cameraX + 100 * i , 32 + playerY+ cameraY));
+        }
 
         // Starting coordinates (adjust as needed)
         float startX = 100f;
@@ -194,31 +213,21 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         // Spacing between tables (adjust as needed)
         float spacingX = 185f;
-        float spacingY = 150f;
+        float spacingY = 175f;
 
-        class Point {
-            private float x;
-            private float y;
-
-            public Point (float x, float y) {
-                this.x = x;
-                this.y = y;
-            }
-
-
-        }
-
-        List<Point> positions = new ArrayList<>();
+        List<PointF> positions = new ArrayList<>();
 
         for (int row = 0; row < 4; row++) {
             for (int col = 0; col < 12; col++) {
                 float x = startX + col * spacingX;
                 float y = startY + row * spacingY;
-                positions.add(new Point(x, y));
+                positions.add(new PointF(x, y));
             }
         }
 
-        for (Point pos : positions) { c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null); }
+        table_pos = positions;
+
+        for (PointF pos : positions) { c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null); }
 
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
@@ -406,7 +415,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             cameraX += deltaX;
             cameraY += deltaY;
         }
-
     }
 
     private void updatedAnimation(int aniSpeed) {
@@ -426,6 +434,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        System.out.println(event.getX());
         if (showEndScreen && event.getAction() == MotionEvent.ACTION_DOWN) {
             float x = event.getX();
             float y = event.getY();
@@ -466,7 +475,64 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
         }
+
+        // Main touch events (non-menu actions)
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+
+            float touchX = event.getX();
+            float touchY = event.getY();
+            int spriteSize = GameConstants.Sprite.SIZE;
+
+            // Check for pause button press if touch isn't on the player.
+            if (pauseButton.contains(touchX, touchY)) {
+                isPaused = true;
+                return true;
+            }
+
+            for (PointF pos: cust_pos) {
+                if (touchX >= pos.x && touchX <= pos.x + 30 && touchY >= pos.y && touchY <= pos.y + 50) {
+//                    teleportPlayer(tou, touchY - 75);
+//                    pos.x
+                }
+            }
+
+            teleportPlayer(touchX - 75, touchY - 75);
+        }
         return true;
+    }
+
+    /**
+     * Teleports the player to a fixed destination.
+     */
+    private void teleportPlayer(float x, float y) {
+
+        int index = table_idx;
+        PointF target = table_pos.get(index);
+        playerX = target.x;
+        playerY = target.y;
+
+        if (table_idx < table_pos.size()-1) {
+            System.out.println("Table index is:" + table_idx);
+            table_idx++;
+        } else {
+            table_idx = 0;
+            playerX = target.x;
+            playerY = target.y;
+        }
+
+        // Optionally, adjust the camera if it is needed
+        // e.g. if the camera should follow the player immediately.
+//        cameraX = 0;
+//        cameraY = 0;
+
+        // If desired, reset animations.
+        resetAnimation();
+        System.out.println("Player teleported to: playerX = " + playerX + ", playerY = " + playerY);
+    }
+
+    public void resetAnimation() {
+        aniTick = 0;         // Reset the counter that schedules frame changes
+        playerAniIndexY = 0; // Reset the animation frame index to the first frame
     }
 
     /**
@@ -514,11 +580,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void setPlayerMoveTrue(PointF lastTouchDiff) {
         movePlayer = true;
         this.lastTouchDiff = lastTouchDiff;
-    }
-
-    public void resetAnimation() {
-        aniTick = 0;
-        playerAniIndexY = 0;
     }
 
     public boolean isPaused() {

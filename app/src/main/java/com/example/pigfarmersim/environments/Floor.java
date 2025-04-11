@@ -31,18 +31,6 @@ public enum Floor implements BitmapMethods {
         System.out.println(sprites.length);
     }
 
-//    Floor(int resID, int tilesInWidth, int tilesInHeight) {
-//        options.inScaled = false;
-//        sprites = new Bitmap[tilesInHeight * tilesInWidth];  // This will be 1
-//        Bitmap spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
-//        // Only one iteration (i = 0, j = 0)
-//        sprites[0] = getScaledBitmap(
-//                Bitmap.createBitmap(spriteSheet, 0, 0, spriteSheet.getWidth(), spriteSheet.getHeight())
-//        );
-//        System.out.println(sprites.length);  // Should print 1
-//    }
-
-
     public Bitmap getSprite(int id){
         return sprites[id];
     }
