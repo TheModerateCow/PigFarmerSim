@@ -43,6 +43,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private ArrayList<PointF> skeletons = new ArrayList<>();
     private List<PointF> table_pos = new ArrayList<>();
     private List<PointF> cust_pos = new ArrayList<>();
+    private List<Customer> customers = new ArrayList<>();
     private int table_idx = 0;
     private final PointF skeletonPos;
     private int skeletonDir = GameConstants.Face_Dir.DOWN;
@@ -79,6 +80,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final RectF endGameButton;
 
     // Add these state constants near the top of GamePanel class
+    private static final int numberOfCustomers = 5;
+
+    private static final float initialX = 0;
+
+    private static final float initialY = 0;
     private static final int STATE_IDLE = 0;
     private static final int STATE_MOVING_TO_TABLE = 1; // Example state
     private static final int STATE_ORDERING = 2;        // Example state
@@ -190,6 +196,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public GameLoop getGameLoop() {
         return gameLoop;
     }
+
     public void render() {
         Canvas c = holder.lockCanvas();
         c.drawColor(Color.BLACK);
@@ -198,16 +205,22 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         touchEvents.draw(c);
 
-        c.drawBitmap(GameCharacters.PLAYER.getSprite(playerAniIndexY, playerFaceDir), playerX, playerY, null);
-        c.drawBitmap(GameCharacters.SKELETON.getSprite(playerAniIndexY, skeletonDir), skeletonPos.x + cameraX, skeletonPos.y + cameraY, null);
-//        c.drawBitmap(Customer.NEW_CUSTOMER.getSprite(customerDir, customerFrame), 32 + playerX + cameraX, 32 + playerY+ cameraY, null);
-//        c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
-        for (int i = 0; i < 5; i++) {
-            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), 32 + playerX + cameraX + 100 * i , 32 + playerY+ cameraY, null);
-            cust_pos.add(new PointF(32 + playerX + cameraX + 100 * i , 32 + playerY+ cameraY));
+//        for (int i = 0; i < 2; i++) {
+//            Customer customer = new Customer();
+//            customer.setCust_ID(i);
+//            if (customer.getPos() == null) {
+//                c.drawBitmap(Customer.getSprite(customerDir, customerFrame), 32 + cameraX + 100 * i, 32 + cameraY, null);
+//                customer.setPos(new PointF(32 + cameraX + 100 * i, 32 + cameraY));
+//            } else {
+//                c.drawBitmap(Customer.getSprite(customerDir, customerFrame), 32 + cameraX + 100 * i, 32 + cameraY, null);
+//            }
+//            customers.add(customer);
+//        }
+        for (Customer customer : customers) {
+            PointF pos = customer.getPos();
+            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), pos.x + cameraX, pos.y + cameraY, null);
         }
-
-        // Starting coordinates (adjust as needed)
+//         Starting coordinates (adjust as needed)
         float startX = 100f;
         float startY = 350f;
 
@@ -477,6 +490,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         // Main touch events (non-menu actions)
+
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
             float touchX = event.getX();
@@ -489,14 +503,32 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
 
-            for (PointF pos: cust_pos) {
-                if (touchX >= pos.x && touchX <= pos.x + 30 && touchY >= pos.y && touchY <= pos.y + 50) {
-//                    teleportPlayer(tou, touchY - 75);
-//                    pos.x
+            for (Customer customer : customers) {
+                PointF custPos = customer.getPos();
+                // Define the bounding box dimensions for the customer
+                float left = custPos.x;
+                float top = custPos.y;
+                float right = left + 100;   // customerWidth could be a constant or a customer property.
+                float bottom = top + 300;    // Same for customerHeight.
+
+                // Check if the touch is within this customer's bounds
+                if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
+                    // Teleport customer to a table, or take the desired action
+                    // For example:
+                    teleportPlayer(customer,touchX - 75, touchY - 75);
+                    System.out.println("On the player");
+                    break;
                 }
             }
 
-            teleportPlayer(touchX - 75, touchY - 75);
+//            for (PointF pos: cust_pos) {
+//                if (touchX >= pos.x && touchX <= pos.x + 30 && touchY >= pos.y && touchY <= pos.y + 50) {
+////                    teleportPlayer(tou, touchY - 75);
+////                    pos.x
+//                }
+//            }
+
+//            teleportPlayer(customer,touchX - 75, touchY - 75);
         }
         return true;
     }
@@ -504,30 +536,29 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     /**
      * Teleports the player to a fixed destination.
      */
-    private void teleportPlayer(float x, float y) {
+    private void teleportPlayer(Customer customer, float x, float y) {
 
-        int index = table_idx;
-        PointF target = table_pos.get(index);
-        playerX = target.x;
-        playerY = target.y;
+        int table_ID = random.nextInt(table_pos.size());
+        PointF target = table_pos.get(table_ID);
+        for (Customer c : customers) {
+            if (c.getTable_ID() == table_ID) {
+
+            }
+        }
+        customer.setTable_ID(table_ID);
+        customer.setPos(target);
 
         if (table_idx < table_pos.size()-1) {
             System.out.println("Table index is:" + table_idx);
             table_idx++;
         } else {
-            table_idx = 0;
-            playerX = target.x;
-            playerY = target.y;
+                table_idx = 0;
+                customer.setPos(target);
         }
-
-        // Optionally, adjust the camera if it is needed
-        // e.g. if the camera should follow the player immediately.
-//        cameraX = 0;
-//        cameraY = 0;
 
         // If desired, reset animations.
         resetAnimation();
-        System.out.println("Player teleported to: playerX = " + playerX + ", playerY = " + playerY);
+        System.out.println("Player teleported to: playerX = " + target.x + ", playerY = " + target.y);
     }
 
     public void resetAnimation() {
@@ -544,7 +575,20 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
         // Initialize resources and start the game loop
+        initializeGameObjects();
         gameLoop.startGameLoop();
+    }
+
+    private void initializeGameObjects() {
+        // For instance, create all your customers once
+        for (int i = 0; i < numberOfCustomers; i++) {
+            Customer customer = new Customer();
+            customer.setCust_ID(i);
+            // Set a starting position according to your game design
+            customer.setPos(new PointF(initialX + 100 * i, initialY));
+            customers.add(customer);
+        }
+        // Initialize other game objects (tables, players, etc.)
     }
 
     /**
