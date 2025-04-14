@@ -37,11 +37,11 @@ public class CustomerSpawner {
 
         // Assign position in the queue
         float baseX = 100; // Starting X position
-        float baseY = 100; // Y position for the queue
+        float baseY = 200; // Y position for the queue
         float spacing = 160; // Space between groups
 
-        float x = baseX + customers.size() * spacing;
-        float y = baseY;
+        float x = baseX;
+        float y = baseY + customers.size() * spacing;
 
         newCustomer.setCoords(new PointF(x, y));
 

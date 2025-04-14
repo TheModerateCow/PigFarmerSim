@@ -17,8 +17,6 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 import com.example.pigfarmersim.entities.Customer;
-import com.example.pigfarmersim.entities.GameCharacters;
-import com.example.pigfarmersim.entities.Table;
 import com.example.pigfarmersim.environments.MapManager;
 import com.example.pigfarmersim.environments.TableManager;
 import com.example.pigfarmersim.helpers.GameConstants;
@@ -159,10 +157,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         int centerX = MainActivity.GAME_WIDTH / 2;
         int centerY = MainActivity.GAME_HEIGHT / 2;
 
-        resumeButton = new RectF(centerX - buttonWidth/2, centerY - buttonHeight - 20,
-                centerX + buttonWidth/2, centerY - 20);
-        quitButton = new RectF(centerX - buttonWidth/2, centerY + 20,
-                centerX + buttonWidth/2, centerY + buttonHeight + 20);
+        resumeButton = new RectF(centerX - buttonWidth / 2, centerY - buttonHeight - 20,
+                centerX + buttonWidth / 2, centerY - 20);
+        quitButton = new RectF(centerX - buttonWidth / 2, centerY + 20,
+                centerX + buttonWidth / 2, centerY + buttonHeight + 20);
 
         // Overlay paint (semi-transparent black)
         endOverlayPaint = new Paint();
@@ -192,10 +190,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         endButtonTextPaint.setTextSize(60);
         endButtonTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        // Calculate positions for end screen elements
-        int endCenterX = MainActivity.GAME_WIDTH / 2;
-        int endCenterY = MainActivity.GAME_HEIGHT / 2;
-
         // End screen background rectangle
         endScreenBgRect = new RectF(
                 centerX - 400, centerY - 300,
@@ -208,8 +202,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 centerX + 200, centerY + 250
         );
 
-        endGameButton = new RectF(centerX - buttonWidth/2, centerY + buttonHeight + 60,
-                centerX + buttonWidth/2, centerY + 2*buttonHeight + 60);
+        endGameButton = new RectF(centerX - buttonWidth / 2, centerY + buttonHeight + 60,
+                centerX + buttonWidth / 2, centerY + 2 * buttonHeight + 60);
 
         // for customer spawner
         customerSpawner = new CustomerSpawner();
@@ -244,7 +238,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         List<CustomerGroup> customers = customerSpawner.getCustomerGroups();
 
-        c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
+//        c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
 
@@ -328,15 +322,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
-//        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
-//            PointF pos = group.getCoords();
-//
-//            // draw sprite at position
-//            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
-//
-//            // draw group size above
-//            c.drawText("x" + group.getGroupSize(), pos.x + 32, pos.y - 10, groupTextPaint);
-//        }
+        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
+            PointF pos = group.getCoords();
+
+            // draw sprite at position
+            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
+
+            // draw group size above
+            c.drawText("x" + group.getGroupSize(), pos.x + 32, pos.y - 10, groupTextPaint);
+        }
 
         PointF baseWorldPos = new PointF(50, 100); // fixed world position where the queue starts
         float spacing = 150; // horizontal spacing between each customer
@@ -365,7 +359,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         if (System.currentTimeMillis() - lastDirChange >= 3000) {
-            skeletonDir = random.nextInt(4);
             lastDirChange = System.currentTimeMillis();
             customerDir = (customerDir + 1) % 4;
         }
@@ -373,33 +366,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (System.currentTimeMillis() - frameTime >= 1000) {
             customerFrame = (customerFrame + 1) % 4;
             frameTime = System.currentTimeMillis();
-        }
-
-        switch (skeletonDir) {
-            case GameConstants.Face_Dir.DOWN:
-                skeletonPos.y += (float) (300 * delta);
-                if (skeletonPos.y >= 1920) {
-                    skeletonDir = GameConstants.Face_Dir.UP;
-                }
-                break;
-            case GameConstants.Face_Dir.UP:
-                skeletonPos.y -= (float) (300 * delta);
-                if (skeletonPos.y <= 0) {
-                    skeletonDir = GameConstants.Face_Dir.DOWN;
-                }
-                break;
-            case GameConstants.Face_Dir.LEFT:
-                skeletonPos.x -= (float) (300 * delta);
-                if (skeletonPos.x <= 0) {
-                    skeletonDir = GameConstants.Face_Dir.RIGHT;
-                }
-                break;
-            case GameConstants.Face_Dir.RIGHT:
-                skeletonPos.x += (float) (300 * delta);
-                if (skeletonPos.x >= 1080) {
-                    skeletonDir = GameConstants.Face_Dir.LEFT;
-                }
-                break;
         }
 
         updatedAnimation(aniSpeed);
@@ -416,9 +382,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         float xSpeed = (float) Math.cos(angle);
         float ySpeed = (float) Math.sin(angle);
-
-//        System.out.println("Angle: " + Math.toDegrees(angle));
-//        System.out.println("xSpeed: " + xSpeed + " | ySpeed: " + ySpeed);
 
         if (xSpeed > ySpeed) {
             if (lastTouchDiff.x > 0) {
@@ -518,22 +481,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 isPaused = true;
                 return true;
             }
-        }
-
-        // In your touch event handler
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                lastTouchX = event.getX();
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                float newTouchX = event.getX();
-                float dx = newTouchX - lastTouchX;
-                if (Math.abs(dx) < minDragThreshold) break;
-
-                lastTouchX = newTouchX;
-                cameraTargetX = cameraX + dx * dragFactor;
-                break;
         }
 
         // Main touch events (non-menu actions)

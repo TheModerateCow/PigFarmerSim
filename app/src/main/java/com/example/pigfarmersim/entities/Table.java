@@ -8,18 +8,27 @@ import com.example.pigfarmersim.R;
 import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.helpers.interfaces.BitmapMethods;
 
-public enum Table implements BitmapMethods{
+public enum Table implements BitmapMethods {
 
     TABLE(R.drawable.table_spritesheet);
 
     private Bitmap sprite;
 
     Table(int resID) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
         Bitmap spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
-        sprite = BitmapMethods.getScaledCharacterBitmap(Bitmap.createBitmap(spriteSheet, 0, 0, GameConstants.Sprite.DEFAULT_SIZE, GameConstants.Sprite.DEFAULT_SIZE));
+
+        // Get the table sprite dimensions (might be larger than the default size)
+        int spriteWidth = spriteSheet.getWidth();
+        int spriteHeight = spriteSheet.getHeight();
+
+        // Create bitmap from the entire spritesheet
+        sprite = BitmapMethods.getScaledCharacterBitmap(
+                Bitmap.createBitmap(spriteSheet, 0, 0, spriteWidth, spriteHeight));
     }
 
-
-
-    public Bitmap getSprite() { return sprite; }
+    public Bitmap getSprite() {
+        return sprite;
+    }
 }

@@ -31,13 +31,13 @@ public class TableManager {
     }
 
     private void generateTableLayout() {
-        float startX = 100f;
-        float startY = 350f;
-        float spacingX = 185f;
-        float spacingY = 150f;
+        float startX = 600f;
+        float startY = 450f;
+        float spacingX = 200f;
+        float spacingY = 185f;
 
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 12; col++) {
+        for (int row = 0; row < 3; row++) {
+            for (int col = 0; col < 6; col++) {
                 float x = startX + col * spacingX;
                 float y = startY + row * spacingY;
                 tables.add(new TableInstance(x, y)); // ← save in world coordinates
@@ -47,7 +47,7 @@ public class TableManager {
 
     public List<PointF> getTablePoints() {
         List<PointF> ret = new ArrayList<>();
-        for(TableInstance table: tables) {
+        for (TableInstance table : tables) {
             ret.add(table.pos);
         }
         return ret;

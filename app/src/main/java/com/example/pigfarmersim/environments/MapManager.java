@@ -1,17 +1,22 @@
 package com.example.pigfarmersim.environments;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
 import com.example.pigfarmersim.MainActivity;
+import com.example.pigfarmersim.R;
 import com.example.pigfarmersim.helpers.GameConstants;
 
 public class MapManager {
 
     private GameMap currentMap;
     private float cameraX, cameraY;
+    private Bitmap backgroundImage;
+    private int mapWidth, mapHeight;
 
     public MapManager() {
-        initTestMap();
+        initMap();
     }
 
     public void setCameraValues(float cameraX, float cameraY) {
@@ -24,7 +29,7 @@ public class MapManager {
             return false;
         }
 
-        if (x >= getMaxWidthCurrentMap() || y >= getMaxHeightCurrentMap()) {
+        if (x >= mapWidth || y >= mapHeight) {
             return false;
         }
 
@@ -32,70 +37,41 @@ public class MapManager {
     }
 
     public int getMaxWidthCurrentMap() {
-        return currentMap.getArrayWidth() * GameConstants.Sprite.SIZE;
+        return mapWidth;
     }
 
     public int getMaxHeightCurrentMap() {
-        return currentMap.getArrayHeight() * GameConstants.Sprite.SIZE;
+        return mapHeight;
     }
 
     public void draw(Canvas c) {
-//        System.out.println("Height: " + currentMap.getArrayHeight());
-//        System.out.println("Width: " + currentMap.getArrayWidth());
-        int numOutsideTiles = (int) Math.ceil((double) MainActivity.GAME_WIDTH / GameConstants.Sprite.SIZE);
-        for (int j = 0; j < currentMap.getArrayHeight(); j++)
-            for (int i = -numOutsideTiles; i < 0; i++)
-                c.drawBitmap(Floor.OUTSIDE.getSprite(currentMap.getSpriteId((i + numOutsideTiles) % 64, j)), i * GameConstants.Sprite.SIZE + cameraX, j * GameConstants.Sprite.SIZE + cameraY, null);
-
-        for (int j = 0; j < currentMap.getArrayHeight(); j++)
-            for (int i = 0; i < currentMap.getArrayWidth(); i++)
-                c.drawBitmap(Floor.INSIDE.getSprite(currentMap.getSpriteId(i, j)), i * GameConstants.Sprite.SIZE + cameraX, j * GameConstants.Sprite.SIZE + cameraY, null);
+        // Draw the background image at the camera position
+        c.drawBitmap(backgroundImage, cameraX, cameraY, null);
     }
 
-    private void initTestMap() {
-        // Map sprite, each id is one tile from the map.
+    private void initMap() {
+        // Load the entire background image directly
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inScaled = false;
+        Bitmap originalImage = BitmapFactory.decodeResource(
+                MainActivity.getGameContext().getResources(),
+                R.drawable.restaurant,
+                options);
 
-//        int[][] spriteIds = {
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//                {454, 276, 275, 275, 190, 275, 275, 279, 275, 275, 275, 297, 275, 275, 279, 275, 275, 275, 297, 110, 0, 1, 1, 1, 2, 110, 132},
-//
-//        };
-        int[][] spriteIds = new int[64][192];
-        for (int row = 0; row < 64; row++) {
-            for (int col = 0; col < 192; col++) {
-                spriteIds[row][col] = row * 64 + (col % 64);
-            }
-        }
+        // Set map dimensions based on the image
+        mapWidth = originalImage.getWidth();
+        mapHeight = originalImage.getHeight();
+
+        // Create a properly scaled background image
+        backgroundImage = Bitmap.createScaledBitmap(
+                originalImage,
+                (int) (mapWidth * 1.7),
+                (int) (mapHeight * 1.7),
+                false);
+
+        // Create a simple map structure for compatibility
+        int[][] spriteIds = new int[1][1];
+        spriteIds[0][0] = 0;
         currentMap = new GameMap(spriteIds);
     }
 }
