@@ -49,7 +49,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private ArrayList<PointF> skeletons = new ArrayList<>();
     private List<PointF> table_pos = new ArrayList<>();
     private List<PointF> cust_pos = new ArrayList<>();
-    private List<Customer> customers = new ArrayList<>();
+    private List<CustomerGroup> customers = new ArrayList<>();
     private int table_idx = 0;
     private final PointF skeletonPos;
     private int skeletonDir = GameConstants.Face_Dir.DOWN;
@@ -104,6 +104,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private static final int STATE_WAITING_IO = 4;
     private static final int STATE_MOVING_FROM_WAIT_AREA = 5;
     private static final int STATE_LEAVING = 6;         // Example state
+    private int score = 0; // Or start with your desired initial score
+    private final Paint scorePaint;
 
     // for customer spawner
     private CustomerSpawner customerSpawner;
@@ -179,9 +181,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         titleTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
         scoreTextPaint = new Paint();
-        scoreTextPaint.setColor(Color.YELLOW);
-        scoreTextPaint.setTextSize(80);
+        scoreTextPaint.setColor(Color.BLACK);
+        scoreTextPaint.setTextSize(100);
         scoreTextPaint.setTextAlign(Paint.Align.CENTER);
+        scoreTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+
 
         endButtonTextPaint = new Paint();
         endButtonTextPaint.setColor(Color.BLACK);
@@ -209,6 +213,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         // for customer spawner
         customerSpawner = new CustomerSpawner();
+
+        //Score pain
+        scorePaint = new Paint();
+        scorePaint.setColor(Color.BLACK);
+        scorePaint.setTextSize(100);
+        scorePaint.setTextAlign(Paint.Align.CENTER); // Center alignment
+        scorePaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
     }
 
     public GameLoop getGameLoop() {
@@ -231,12 +242,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         table_pos = tableManager.getTablePoints();
 
-        c.drawBitmap(GameCharacters.PLAYER.getSprite(playerAniIndexY, playerFaceDir), playerX, playerY, null);
-        c.drawBitmap(GameCharacters.SKELETON.getSprite(playerAniIndexY, skeletonDir), skeletonPos.x + cameraX, skeletonPos.y + cameraY, null);
-        c.drawBitmap(Customer.getSprite(customerDir, customerFrame), 32 + playerX + cameraX, 32 + playerY+ cameraY, null);
+        List<CustomerGroup> customers = customerSpawner.getCustomerGroups();
+
         c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
+
+        // *** Draw the scoreboard in the top-right corner ***
+        int margin = 20;  // Padding from the edge
+        // Using MainActivity.GAME_WIDTH here or you could use c.getWidth()
+        String scoreText = "Score: " + score;
+        c.drawText(scoreText, MainActivity.GAME_WIDTH / 2, 60 + margin, scorePaint);
 
         // Draw pause icon (two vertical bars)
         float barWidth = 12;
@@ -294,15 +310,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     endScreenBgRect.top + 150,
                     titleTextPaint);
 
-            // Draw score
-            c.drawText("YOUR SCORE",
-                    MainActivity.GAME_WIDTH / 2,
-                    endScreenBgRect.top + 250,
-                    scoreTextPaint);
-            c.drawText(String.valueOf(0),
-                    MainActivity.GAME_WIDTH / 2,
-                    endScreenBgRect.top + 350,
-                    scoreTextPaint);
 
             // Draw menu button
             Paint buttonPaint = new Paint();
@@ -516,168 +523,168 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 break;
         }
 
-    // Main touch events (non-menu actions)
+        // Main touch events (non-menu actions)
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            System.out.println("Touch down");
 
-        float touchX = event.getX();
-        float touchY = event.getY();
-        int spriteSize = GameConstants.Sprite.SIZE;
+            customers = customerSpawner.getCustomerGroups();
 
-        // Check for pause button press if touch isn't on the player.
-        if (pauseButton.contains(touchX, touchY)) {
-            isPaused = true;
-            return true;
-        }
+            float touchX = event.getX();
+            float touchY = event.getY();
+            int spriteSize = GameConstants.Sprite.SIZE;
 
-        for (Customer customer : customers) {
-            PointF custPos = customer.getPos();
-            // Define the bounding box dimensions for the customer
-            float left = custPos.x;
-            float top = custPos.y;
-            float right = left + 100;   // customerWidth could be a constant or a customer property.
-            float bottom = top + 300;    // Same for customerHeight.
+            // Check for pause button press if touch isn't on the player.
+            if (pauseButton.contains(touchX, touchY)) {
+                isPaused = true;
+                return true;
+            }
+            for (CustomerGroup customer : customers) {
+                PointF custPos = customer.getCoords();
+                // Define the bounding box dimensions for the customer
+                float left = custPos.x;
+                float top = custPos.y;
+                float right = left + 100;   // customerWidth could be a constant or a customer property.
+                float bottom = top + 300;    // Same for customerHeight.
 
-            // Check if the touch is within this customer's bounds
-            if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
-                // Teleport customer to a table, or take the desired action
-                // For example:
-                teleportPlayer(customer,touchX - 75, touchY - 75);
-                System.out.println("On the player");
-                break;
+                // Check if the touch is within this customer's bounds
+                if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
+                    // Teleport customer to a table, or take the desired action
+                    // For example:
+                    teleportPlayer(customer,touchX - 75, touchY - 75);
+                    System.out.println("On the player");
+                    break;
+                }
             }
         }
-
-//            for (PointF pos: cust_pos) {
-//                if (touchX >= pos.x && touchX <= pos.x + 30 && touchY >= pos.y && touchY <= pos.y + 50) {
-////                    teleportPlayer(tou, touchY - 75);
-////                    pos.x
-//                }
-//            }
-
-//            teleportPlayer(customer,touchX - 75, touchY - 75);
+            return true;
     }
-        return true;
-}
 
 /**
  * Teleports the player to a fixed destination.
  */
-private void teleportPlayer(Customer customer, float x, float y) {
+    private void teleportPlayer(CustomerGroup customer, float x, float y) {
 
-    int table_ID = random.nextInt(table_pos.size());
-    PointF target = table_pos.get(table_ID);
-    for (Customer c : customers) {
-        if (c.getTable_ID() == table_ID) {
+        int table_ID = random.nextInt(table_pos.size());
+        PointF target = table_pos.get(table_ID);
+
+        customer.setCoords(target);
+
+        // If desired, reset animations.
+        resetAnimation();
+        System.out.println("Player teleported to: playerX = " + target.x + ", playerY = " + target.y);
+    }
+
+    public void resetAnimation() {
+        aniTick = 0;         // Reset the counter that schedules frame changes
+        playerAniIndexY = 0; // Reset the animation frame index to the first frame
+    }
+
+    /**
+     * This method is called when the surface is created.
+     * It is typically used to start the game loop or initialize game resources.
+     *
+     * @param surfaceHolder the {@link SurfaceHolder} whose surface is being created.
+     */
+    @Override
+    public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
+        // Initialize resources and start the game loop
+        initializeGameObjects();
+        gameLoop.startGameLoop();
+    }
+
+    private void initializeGameObjects() {
+        Paint groupTextPaint = new Paint();
+        groupTextPaint.setColor(Color.WHITE);
+        groupTextPaint.setTextSize(40);
+        groupTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
 
         }
-    }
-    customer.setTable_ID(table_ID);
-    customer.setPos(target);
 
-    if (table_idx < table_pos.size()-1) {
-        System.out.println("Table index is:" + table_idx);
-        table_idx++;
-    } else {
-        table_idx = 0;
-        customer.setPos(target);
+        // for customer spawner
+        customerSpawner.update();
     }
 
-    // If desired, reset animations.
-    resetAnimation();
-    System.out.println("Player teleported to: playerX = " + target.x + ", playerY = " + target.y);
-}
 
-public void resetAnimation() {
-    aniTick = 0;         // Reset the counter that schedules frame changes
-    playerAniIndexY = 0; // Reset the animation frame index to the first frame
-}
 
-/**
- * This method is called when the surface is created.
- * It is typically used to start the game loop or initialize game resources.
- *
- * @param surfaceHolder the {@link SurfaceHolder} whose surface is being created.
- */
-@Override
-public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
-    // Initialize resources and start the game loop
-    initializeGameObjects();
-    gameLoop.startGameLoop();
-}
 
-private void initializeGameObjects() {
-    // For instance, create all your customers once
-    for (int i = 0; i < numberOfCustomers; i++) {
-        Customer customer = new Customer();
-        customer.setCust_ID(i);
-        // Set a starting position according to your game design
-        customer.setPos(new PointF(initialX + 100 * i, initialY));
-        customers.add(customer);
+    /**
+     * This method is called when the surface changes, such as size or format.
+     * You can adjust your rendering code here if the surface dimensions change.
+     *
+     * @param holder the {@link SurfaceHolder} whose surface has changed.
+     * @param format the new PixelFormat of the surface.
+     * @param width  the new width of the surface.
+     * @param height the new height of the surface.
+     */
+    @Override
+    public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+        // Handle changes to the surface, such as size or orientation changes
     }
-    // Initialize other game objects (tables, players, etc.)
-}
 
-/**
- * This method is called when the surface changes, such as size or format.
- * You can adjust your rendering code here if the surface dimensions change.
- *
- * @param holder the {@link SurfaceHolder} whose surface has changed.
- * @param format the new PixelFormat of the surface.
- * @param width  the new width of the surface.
- * @param height the new height of the surface.
- */
-@Override
-public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
-    // Handle changes to the surface, such as size or orientation changes
-}
-
-/**
- * This method is called immediately before a surface is being destroyed.
- * It is important to stop any threads or release resources here to avoid memory leaks.
- *
- * @param holder the {@link SurfaceHolder} whose surface is being destroyed.
- */
-@Override
-public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
-    // Clean up resources and stop the game loop safely
-}
-
-public void setPlayerMoveFalse() {
-    movePlayer = false;
-    resetAnimation();
-}
-
-public void setPlayerMoveTrue(PointF lastTouchDiff) {
-    movePlayer = true;
-    this.lastTouchDiff = lastTouchDiff;
-}
-
-public boolean isPaused() {
-    return isPaused;
-}
-
-public void setPaused(boolean paused) {
-    isPaused = paused;
-}
-
-public void showEndScreen() {
-    showEndScreen = true;
-    isPaused = true;
-    if (gameLoop != null) {
-        gameLoop.stopGameLoop();
+    /**
+     * This method is called immediately before a surface is being destroyed.
+     * It is important to stop any threads or release resources here to avoid memory leaks.
+     *
+     * @param holder the {@link SurfaceHolder} whose surface is being destroyed.
+     */
+    @Override
+    public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+        // Clean up resources and stop the game loop safely
     }
-}
 
-public void returnToMainMenu() {
-    Context context = getContext();
-    if (context instanceof MainActivity) {
-        ((MainActivity) context).finishGame();
+    public void setPlayerMoveFalse() {
+        movePlayer = false;
+        resetAnimation();
     }
-}
 
-public void gameOver() {
-    showEndScreen();
-    // You might want to save the score here
-}
+    public void setPlayerMoveTrue(PointF lastTouchDiff) {
+        movePlayer = true;
+        this.lastTouchDiff = lastTouchDiff;
+    }
+
+    public boolean isPaused() {
+        return isPaused;
+    }
+
+    public void setPaused(boolean paused) {
+        isPaused = paused;
+    }
+
+    public void showEndScreen() {
+        showEndScreen = true;
+        isPaused = true;
+        if (gameLoop != null) {
+            gameLoop.stopGameLoop();
+        }
+    }
+
+    public void returnToMainMenu() {
+        Context context = getContext();
+        if (context instanceof MainActivity) {
+            ((MainActivity) context).finishGame();
+        }
+    }
+
+    public void update_score(double delta) {
+            if (!isPaused) {
+                // Update game logic
+                updatePlayerMove(delta);
+                // Update the score as an example:
+                score += 1;  // You could base this on game events rather than a simple increment
+                mapManager.setCameraValues(cameraX, cameraY);
+            }
+
+            // ... existing logic for enemy movement, skeletonDir adjustments, etc.
+
+            updatedAnimation(aniSpeed);
+    }
+
+
+    public void gameOver() {
+        showEndScreen();
+        // You might want to save the score here
+    }
 }
