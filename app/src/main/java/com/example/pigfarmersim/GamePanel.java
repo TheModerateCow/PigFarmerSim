@@ -105,6 +105,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private static final int STATE_MOVING_FROM_WAIT_AREA = 5;
     private static final int STATE_LEAVING = 6;         // Example state
 
+    // for customer spawner
+    private CustomerSpawner customerSpawner;
 
     /**
      * Constructs a new GamePanel with the specified context.
@@ -204,6 +206,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         endGameButton = new RectF(centerX - buttonWidth/2, centerY + buttonHeight + 60,
                 centerX + buttonWidth/2, centerY + 2*buttonHeight + 60);
+
+        // for customer spawner
+        customerSpawner = new CustomerSpawner();
     }
 
     public GameLoop getGameLoop() {
@@ -309,6 +314,32 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     menuButtonRect.centerY() + 20,
                     endButtonTextPaint);
         }
+
+        // Draw customer groups in a waiting queue near the top
+        List<CustomerGroup> groups = customerSpawner.getCustomerGroups();
+
+        float queueX = 100;
+        float queueY = 100;
+        float spacing = 160; // spacing between customers in the queue
+
+        Paint groupTextPaint = new Paint();
+        groupTextPaint.setColor(Color.WHITE);
+        groupTextPaint.setTextSize(40);
+        groupTextPaint.setTextAlign(Paint.Align.CENTER);
+
+        for (int i = 0; i < groups.size(); i++) {
+            CustomerGroup group = groups.get(i);
+            float x = queueX + i * spacing;
+
+            // Draw sprite
+            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), x, queueY, null);
+
+            // Draw group size above the sprite
+            c.drawText("x" + group.getGroupSize(), x + 32, queueY - 10, groupTextPaint); // Assuming 64x64 sprite
+        }
+
+        // for customer spawner
+        customerSpawner.update();
 
         holder.unlockCanvasAndPost(c);
     }
