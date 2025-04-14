@@ -40,16 +40,7 @@ public class MapManager {
     }
 
     public void draw(Canvas c) {
-//        System.out.println("Height: " + currentMap.getArrayHeight());
-//        System.out.println("Width: " + currentMap.getArrayWidth());
-        int numOutsideTiles = (int) Math.ceil((double) MainActivity.GAME_WIDTH / GameConstants.Sprite.SIZE);
-        for (int j = 0; j < currentMap.getArrayHeight(); j++)
-            for (int i = -numOutsideTiles; i < 0; i++)
-                c.drawBitmap(Floor.OUTSIDE.getSprite(currentMap.getSpriteId((i + numOutsideTiles) % 64, j)), i * GameConstants.Sprite.SIZE + cameraX, j * GameConstants.Sprite.SIZE + cameraY, null);
-
-        for (int j = 0; j < currentMap.getArrayHeight(); j++)
-            for (int i = 0; i < currentMap.getArrayWidth(); i++)
-                c.drawBitmap(Floor.INSIDE.getSprite(currentMap.getSpriteId(i, j)), i * GameConstants.Sprite.SIZE + cameraX, j * GameConstants.Sprite.SIZE + cameraY, null);
+        c.drawBitmap(Floor.OUTSIDE.getBackground(), 0, 0, null);
     }
 
     private void initTestMap() {

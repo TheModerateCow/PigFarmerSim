@@ -1,39 +1,38 @@
 package com.example.pigfarmersim.environments;
 
+import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.DisplayMetrics;
 
 import com.example.pigfarmersim.MainActivity;
 import com.example.pigfarmersim.R;
-import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.helpers.interfaces.BitmapMethods;
-
-import java.util.Arrays;
 
 public enum Floor implements BitmapMethods {
 
-    INSIDE(R.drawable.inside_restaurant, 64, 64),
-    OUTSIDE(R.drawable.outside_restaurant, 64, 64);
-//    OUTSIDE(R.drawable.restaurant_floor, 16, 16);
-//    OUTSIDE(R.drawable.restaurant_floor, 1, 1);
+    OUTSIDE(R.drawable.restaurant);
 
+    private Bitmap background;
 
-    private Bitmap[] sprites;
-
-    Floor(int resID, int tilesInWidth, int tilesInHeight) {
+    Floor(int resID) {
+        // Disable auto-scaling from density
         options.inScaled = false;
-        sprites = new Bitmap[tilesInHeight * tilesInWidth];
-        Bitmap spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
-        for (int j = 0; j < tilesInHeight; j++)
-            for (int i = 0; i < tilesInWidth; i++) {
-                int index = j * tilesInWidth + i;
-                sprites[index] = getScaledBitmap(Bitmap.createBitmap(spriteSheet, GameConstants.Sprite.DEFAULT_SIZE * i, GameConstants.Sprite.DEFAULT_SIZE * j, GameConstants.Sprite.DEFAULT_SIZE, GameConstants.Sprite.DEFAULT_SIZE));
-            }
-        System.out.println(sprites.length);
+
+        // Load the bitmap from resources
+        Bitmap original = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
+
+        // Get screen dimensions
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        ((Activity) MainActivity.getGameContext()).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int screenWidth = displayMetrics.widthPixels;
+        int screenHeight = displayMetrics.heightPixels;
+
+        // Scale the bitmap to fit the screen size
+        background = Bitmap.createScaledBitmap(original, screenWidth, screenHeight, true);
     }
 
-    public Bitmap getSprite(int id){
-        return sprites[id];
+    public Bitmap getBackground() {
+        return background;
     }
-
 }

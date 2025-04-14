@@ -44,8 +44,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private float cameraX, cameraY;
     private float cameraTargetX = cameraX;
     private float lastTouchX;
-    private final float dragFactor = 0.9f;         // Reduces touch sensitivity
-    private final float minDragThreshold = 10f;      // Ignore tiny finger twitches
+    private final float minDragThreshold = 20f;      // Ignore tiny finger twitches
     private ArrayList<PointF> skeletons = new ArrayList<>();
     private List<PointF> table_pos = new ArrayList<>();
     private List<PointF> cust_pos = new ArrayList<>();
@@ -476,23 +475,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        // In your touch event handler
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                lastTouchX = event.getX();
-                break;
-
-            case MotionEvent.ACTION_MOVE:
-                float newTouchX = event.getX();
-                float dx = newTouchX - lastTouchX;
-                if (Math.abs(dx) < minDragThreshold) break;
-
-                lastTouchX = newTouchX;
-                cameraTargetX = cameraX + dx * dragFactor;
-                break;
-        }
-
-    // Main touch events (non-menu actions)
+        // Main touch events (non-menu actions)
 
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
 
