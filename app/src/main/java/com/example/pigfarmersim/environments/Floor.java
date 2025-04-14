@@ -12,7 +12,8 @@ import java.util.Arrays;
 
 public enum Floor implements BitmapMethods {
 
-    OUTSIDE(R.drawable.restaurant_floor, 64, 64);
+    INSIDE(R.drawable.inside_restaurant, 64, 64),
+    OUTSIDE(R.drawable.outside_restaurant, 64, 64);
 //    OUTSIDE(R.drawable.restaurant_floor, 16, 16);
 //    OUTSIDE(R.drawable.restaurant_floor, 1, 1);
 
