@@ -9,7 +9,7 @@ import com.example.pigfarmersim.R;
 import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.helpers.interfaces.BitmapMethods;
 
-public class Customer implements BitmapMethods{
+public class Customer implements BitmapMethods {
     private Bitmap spriteSheet;
     private static Bitmap[][] sprites = new Bitmap[4][4];
     private static boolean waiting_IO = false;

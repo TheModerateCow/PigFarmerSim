@@ -17,10 +17,6 @@ public interface BitmapMethods {
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, false);
     }
 
-//    default Bitmap getScaledCharacterBitmap(Bitmap bitmap) {
-//        return Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() * 8, bitmap.getHeight() * 8, false);
-//    }
-
     public static Bitmap getScaledCharacterBitmap(Bitmap bitmap) {
         // scaling logic here
         return Bitmap.createScaledBitmap(bitmap, bitmap.getWidth() * 8, bitmap.getHeight() * 8, false);
