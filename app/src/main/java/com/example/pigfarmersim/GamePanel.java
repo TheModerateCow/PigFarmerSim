@@ -316,26 +316,19 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         // Draw customer groups in a waiting queue near the top
-        List<CustomerGroup> groups = customerSpawner.getCustomerGroups();
-
-        float queueX = 100;
-        float queueY = 100;
-        float spacing = 160; // spacing between customers in the queue
-
         Paint groupTextPaint = new Paint();
         groupTextPaint.setColor(Color.WHITE);
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        for (int i = 0; i < groups.size(); i++) {
-            CustomerGroup group = groups.get(i);
-            float x = queueX + i * spacing;
+        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
+            PointF pos = group.getCoords();
 
-            // Draw sprite
-            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), x, queueY, null);
+            // draw sprite at position
+            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
 
-            // Draw group size above the sprite
-            c.drawText("x" + group.getGroupSize(), x + 32, queueY - 10, groupTextPaint); // Assuming 64x64 sprite
+            // draw group size above
+            c.drawText("x" + group.getGroupSize(), pos.x + 32, pos.y - 10, groupTextPaint);
         }
 
         // for customer spawner

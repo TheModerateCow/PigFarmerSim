@@ -1,5 +1,6 @@
 package com.example.pigfarmersim;
 
+import android.graphics.PointF;
 import android.os.SystemClock;
 
 import java.util.ArrayList;
@@ -34,10 +35,17 @@ public class CustomerSpawner {
         // Create a new customer instance with desired parameters
         CustomerGroup newCustomer = new CustomerGroup();
 
-        // Add to the list of active customers
-        customers.add(newCustomer);
+        // Assign position in the queue
+        float baseX = 100; // Starting X position
+        float baseY = 100; // Y position for the queue
+        float spacing = 160; // Space between groups
 
-        // You can also pass this list to GamePanel to render or interact with it
+        float x = baseX + customers.size() * spacing;
+        float y = baseY;
+
+        newCustomer.setCoords(new PointF(x, y));
+
+        customers.add(newCustomer);
     }
 
     public List<CustomerGroup> getCustomerGroups() {

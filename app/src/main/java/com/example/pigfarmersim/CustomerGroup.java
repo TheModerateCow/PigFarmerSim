@@ -1,14 +1,18 @@
 package com.example.pigfarmersim;
 
+import android.graphics.PointF;
+
 import java.util.Random;
 
 public class CustomerGroup {
 
     private int groupSize; // 1 to 4
     private static final Random random = new Random();
+    private PointF coords;
 
     public CustomerGroup() {
         this.groupSize = random.nextInt(4) + 1; // Random group size from 1 to 4
+        this.coords = new PointF(50, 50);
     }
 
     public CustomerGroup(int groupSize) {
@@ -28,4 +32,10 @@ public class CustomerGroup {
     }
 
     // Add any other methods like getSprite(...) etc. as needed
+    public PointF getCoords() {
+        return this.coords;
+    }
+    public void setCoords(PointF coords) {
+        this.coords = coords;
+    }
 }
