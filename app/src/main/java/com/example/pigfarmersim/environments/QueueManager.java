@@ -24,7 +24,7 @@ public class QueueManager {
     private final Map<String, Bounds> limits = new HashMap<>();
 
     private final int OUTSIDE_COLS = 2;
-    private final int OUTSIDE_GROUPS = 10;
+    private final int OUTSIDE_GROUPS = 6;
 
     public QueueManager(TableManager tableManager) {
         freeDownstairTables = tableManager.getDownstairTables();

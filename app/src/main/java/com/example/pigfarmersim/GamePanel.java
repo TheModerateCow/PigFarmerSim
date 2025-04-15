@@ -325,7 +325,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
             if (group.inQueue == false) {
-                System.out.println(group.listPoints);
                 for (PointF pos: group.listPoints) {
                     c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
                 }
@@ -343,6 +342,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         // for customer spawner
         customerSpawner.update();
 
+        // for customer timer
+        Paint timerPaint = new Paint();
+
+        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
+            group.drawTimer(c, timerPaint);
+        }
+
         holder.unlockCanvasAndPost(c);
     }
 
@@ -355,6 +361,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (System.currentTimeMillis() - frameTime >= 1000) {
             customerFrame = (customerFrame + 1) % 4;
             frameTime = System.currentTimeMillis();
+        }
+
+        // for customer timer
+        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
+            customer.updateTimer();
         }
     }
 
@@ -424,16 +435,24 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 float left = custPos.x;
                 float top = custPos.y;
                 float right = left + 100;   // customerWidth could be a constant or a customer property.
-                float bottom = top + 300;    // Same for customerHeight.
+                float bottom = top + 150;    // Same for customerHeight.
 
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
                     if (customer.inQueue == true) {
                         queueManager.giveFreeTables(customer);
                         customer.inQueue = false;
+
+                        // for customer timer
+                        customer.stopWaitingTimer();
+                        customer.startJobTimer();
                     } else {
                         queueManager.returnFreeTables(customer);
                         customer.inQueue = true;
+
+                        // for customer reset timer
+                        customer.stopJobTimer();
+                        customer.startWaitingTimer();
                     }
                 }
             }
