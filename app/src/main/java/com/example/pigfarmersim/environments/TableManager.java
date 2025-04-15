@@ -3,6 +3,7 @@ package com.example.pigfarmersim.environments;
 import android.graphics.Canvas;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -72,11 +73,15 @@ public class TableManager {
     }
     public List<PointF> getUpstairTables() { return upstairTables; }
 
-    public void drawAll(Canvas c) {
-        for (PointF pos : downstairTables) {
+    public synchronized void drawAll(Canvas c) {
+        Iterator<PointF> posIter = downstairTables.iterator();
+        while (posIter.hasNext()) {
+            PointF pos = posIter.next();
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
-        for (PointF pos : upstairTables) {
+        posIter = upstairTables.iterator();
+        while (posIter.hasNext()) {
+            PointF pos = posIter.next();
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
     }

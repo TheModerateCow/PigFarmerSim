@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Random;
 
 public class CustomerSpawner {
-    private final List<CustomerGroup> customers = new ArrayList<>();
+    public final List<CustomerGroup> customers = new ArrayList<>();
     private final Random random = new Random();
     private long lastSpawnTime;
     private long nextSpawnDelay; // milliseconds
