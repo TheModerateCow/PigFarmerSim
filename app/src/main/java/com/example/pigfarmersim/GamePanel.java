@@ -17,7 +17,9 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 import com.example.pigfarmersim.entities.Customer;
+import com.example.pigfarmersim.entities.CustomerGroup;
 import com.example.pigfarmersim.environments.MapManager;
+import com.example.pigfarmersim.environments.QueueManager;
 import com.example.pigfarmersim.environments.TableManager;
 import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.inputs.TouchEvents;
@@ -58,7 +60,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private int aniTick;
     private int aniSpeed = 10;
     private MapManager mapManager;
-
+    private QueueManager queueManager;
     private TableManager tableManager;
 
     private ArrayList<PointF> customer_queue = new ArrayList<>();
@@ -120,6 +122,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         gameLoop = new GameLoop(this);
         mapManager = new MapManager();
         tableManager = new TableManager();
+        queueManager = new QueueManager(tableManager);
 
         skeletonPos = new PointF((random.nextInt(MainActivity.GAME_WIDTH)), (random.nextInt(MainActivity.GAME_HEIGHT)));
 
@@ -231,13 +234,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         mapManager.draw(c);
 
-        tableManager.drawAll(c, cameraX, cameraY);
+        tableManager.drawAll(c);
 
-        table_pos = tableManager.getTablePoints();
+        table_pos = tableManager.getDownstairTables();
 
         List<CustomerGroup> customers = customerSpawner.getCustomerGroups();
 
-//        c.drawBitmap(Table.TABLE.getSprite(),32 + playerX + cameraX, 96 + playerY+ cameraY, null);
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
 
@@ -322,27 +324,21 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
         for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
-            PointF pos = group.getCoords();
+            if (group.inQueue == false) {
+                System.out.println(group.listPoints);
+                for (PointF pos: group.listPoints) {
+                    c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
+                }
+                continue;
+            };
+            if (group.queuePoint == null) { group.queuePoint = queueManager.getFreeQueue(); }
+            PointF pos = group.queuePoint;
 
             // draw sprite at position
-            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
+            c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
 
             // draw group size above
-            c.drawText("x" + group.getGroupSize(), pos.x + 32, pos.y - 10, groupTextPaint);
-        }
-
-        PointF baseWorldPos = new PointF(50, 100); // fixed world position where the queue starts
-        float spacing = 150; // horizontal spacing between each customer
-
-        int i = 0;
-        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
-            float drawX = baseWorldPos.x + i * spacing + cameraX - 1024;
-            float drawY = baseWorldPos.y + cameraY;
-
-            c.drawBitmap(Customer.getSprite(customerDir, customerFrame), drawX, drawY, null);
-            c.drawText("x" + group.getGroupSize(), drawX + 32, drawY - 10, groupTextPaint);
-
-            i++;
+            c.drawText("x" + group.groupSize, pos.x + 32, pos.y - 10, groupTextPaint);
         }
         // for customer spawner
         customerSpawner.update();
@@ -351,12 +347,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update(double delta) {
-        // Only update game state if not paused
-        if (!isPaused) {
-            updatePlayerMove(delta);
-            mapManager.setCameraValues(cameraX, cameraY);
-        }
-
         if (System.currentTimeMillis() - lastDirChange >= 3000) {
             lastDirChange = System.currentTimeMillis();
             customerDir = (customerDir + 1) % 4;
@@ -365,76 +355,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (System.currentTimeMillis() - frameTime >= 1000) {
             customerFrame = (customerFrame + 1) % 4;
             frameTime = System.currentTimeMillis();
-        }
-
-        updatedAnimation(aniSpeed);
-    }
-
-    private void updatePlayerMove(double delta) {
-        if (!movePlayer) {
-            return;
-        }
-
-        float baseSpeed = (float) (delta * 300);
-        float ratio = abs(lastTouchDiff.y) / abs(lastTouchDiff.x);
-        double angle = Math.atan(ratio);
-
-        float xSpeed = (float) Math.cos(angle);
-        float ySpeed = (float) Math.sin(angle);
-
-        if (xSpeed > ySpeed) {
-            if (lastTouchDiff.x > 0) {
-                playerFaceDir = GameConstants.Face_Dir.RIGHT;
-            } else {
-                playerFaceDir = GameConstants.Face_Dir.LEFT;
-
-            }
-        } else {
-            if (lastTouchDiff.y > 0) {
-                playerFaceDir = GameConstants.Face_Dir.DOWN;
-            } else {
-                playerFaceDir = GameConstants.Face_Dir.UP;
-            }
-        }
-
-        if (lastTouchDiff.x < 0) {
-            xSpeed *= -1;
-        }
-        if (lastTouchDiff.y < 0) {
-            ySpeed *= -1;
-        }
-
-        int pWidth = GameConstants.Sprite.SIZE;
-        int pHeight = GameConstants.Sprite.SIZE;
-
-        if (xSpeed <= 0) {
-            pWidth = 0;
-        }
-
-        if (ySpeed <= 0) {
-            pHeight = 0;
-        }
-
-        float deltaX = xSpeed * baseSpeed * -1;
-        float deltaY = ySpeed * baseSpeed * -1;
-
-        if (mapManager.canMoveHere(playerX + cameraX * -1 + deltaX * -1 + pWidth, playerY + cameraY * -1 + deltaY * -1 + pHeight)) {
-            cameraX += deltaX;
-            cameraY += deltaY;
-        }
-    }
-
-    private void updatedAnimation(int aniSpeed) {
-        if (!movePlayer) {
-            return;
-        }
-        aniTick++;
-        if (aniTick >= aniSpeed) {
-            aniTick = 0;
-            playerAniIndexY++;
-            if (playerAniIndexY >= 4) {
-                playerAniIndexY = 0;
-            }
         }
     }
 
@@ -499,7 +419,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
             for (CustomerGroup customer : customers) {
-                PointF custPos = customer.getCoords();
+                PointF custPos = customer.getCurrent();
                 // Define the bounding box dimensions for the customer
                 float left = custPos.x;
                 float top = custPos.y;
@@ -508,30 +428,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
-                    // Teleport customer to a table, or take the desired action
-                    // For example:
-                    teleportPlayer(customer,touchX - 75, touchY - 75);
-                    System.out.println("On the player");
-                    break;
+                    if (customer.inQueue == true) {
+                        queueManager.giveFreeTables(customer);
+                        customer.inQueue = false;
+                    } else {
+                        queueManager.returnFreeTables(customer);
+                        customer.inQueue = true;
+                    }
                 }
             }
         }
             return true;
-    }
-
-/**
- * Teleports the player to a fixed destination.
- */
-    private void teleportPlayer(CustomerGroup customer, float x, float y) {
-
-        int table_ID = random.nextInt(table_pos.size());
-        PointF target = table_pos.get(table_ID);
-
-        customer.setCoords(target);
-
-        // If desired, reset animations.
-        resetAnimation();
-        System.out.println("Player teleported to: playerX = " + target.x + ", playerY = " + target.y);
     }
 
     public void resetAnimation() {
@@ -565,9 +472,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         // for customer spawner
         customerSpawner.update();
     }
-
-
-
 
     /**
      * This method is called when the surface changes, such as size or format.
@@ -626,21 +530,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             ((MainActivity) context).finishGame();
         }
     }
-
-    public void update_score(double delta) {
-            if (!isPaused) {
-                // Update game logic
-                updatePlayerMove(delta);
-                // Update the score as an example:
-                score += 1;  // You could base this on game events rather than a simple increment
-                mapManager.setCameraValues(cameraX, cameraY);
-            }
-
-            // ... existing logic for enemy movement, skeletonDir adjustments, etc.
-
-            updatedAnimation(aniSpeed);
-    }
-
 
     public void gameOver() {
         showEndScreen();

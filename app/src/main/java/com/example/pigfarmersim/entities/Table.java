@@ -13,6 +13,8 @@ public enum Table implements BitmapMethods {
     TABLE(R.drawable.table_spritesheet);
 
     private Bitmap sprite;
+    public int spriteWidth;
+    public int spriteHeight;
 
     Table(int resID) {
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -20,8 +22,8 @@ public enum Table implements BitmapMethods {
         Bitmap spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resID, options);
 
         // Get the table sprite dimensions (might be larger than the default size)
-        int spriteWidth = spriteSheet.getWidth();
-        int spriteHeight = spriteSheet.getHeight();
+        spriteWidth = spriteSheet.getWidth();
+        spriteHeight = spriteSheet.getHeight();
 
         // Create bitmap from the entire spritesheet
         sprite = BitmapMethods.getScaledCharacterBitmap(

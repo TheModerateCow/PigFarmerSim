@@ -3,6 +3,8 @@ package com.example.pigfarmersim;
 import android.graphics.PointF;
 import android.os.SystemClock;
 
+import com.example.pigfarmersim.entities.CustomerGroup;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -32,20 +34,7 @@ public class CustomerSpawner {
     }
 
     private void spawnCustomer() {
-        // Create a new customer instance with desired parameters
-        CustomerGroup newCustomer = new CustomerGroup();
-
-        // Assign position in the queue
-        float baseX = 100; // Starting X position
-        float baseY = 200; // Y position for the queue
-        float spacing = 160; // Space between groups
-
-        float x = baseX;
-        float y = baseY + customers.size() * spacing;
-
-        newCustomer.setCoords(new PointF(x, y));
-
-        customers.add(newCustomer);
+        customers.add(new CustomerGroup());
     }
 
     public List<CustomerGroup> getCustomerGroups() {
