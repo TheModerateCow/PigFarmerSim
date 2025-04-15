@@ -442,17 +442,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     if (customer.inQueue == true) {
                         queueManager.giveFreeTables(customer);
                         customer.inQueue = false;
-
-                        // for customer timer
-                        customer.stopWaitingTimer();
-                        customer.startJobTimer();
                     } else {
                         queueManager.returnFreeTables(customer);
-                        customer.inQueue = true;
+                        if (customer.isComplete) {
+                            // TODO iterator for customers and remove complete
+                        } else if (customer.jobDone) {
+                            customer.reset();
+                        } else {
+                            customer.inQueue = true;
+                        }
 
-                        // for customer reset timer
-                        customer.stopJobTimer();
-                        customer.startWaitingTimer();
                     }
                 }
             }

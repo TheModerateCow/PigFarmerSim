@@ -13,12 +13,14 @@ public class CustomerGroup {
 
     public int groupSize; // 1 to 4
     public boolean inQueue = true;
+    public boolean jobDone = false;
+    public boolean isComplete = false;
     private static final Random random = new Random();
     public PointF queuePoint = null;
     public List<PointF> listPoints = new ArrayList<>();
-
     // for timer
     private static final long WAITING_TIME = 20000; // 20 seconds
+    private long waitingTimeLeft = WAITING_TIME;
     private static final long JOB_TIME = 5000;
     private long spawnTime;
     private boolean waitingTimerRunning = false;
@@ -31,7 +33,7 @@ public class CustomerGroup {
         for (int i = 0; i < this.groupSize; i++) {
             listPoints.add(new PointF());
         }
-        this.startWaitingTimer();
+        this.spawnTime = System.currentTimeMillis();
     }
 
     public PointF getCurrent() {
@@ -39,55 +41,44 @@ public class CustomerGroup {
         else return listPoints.get(0);
     }
 
-    // start timer
-    public void startWaitingTimer() {
-        spawnTime = System.currentTimeMillis();
-        waitingTimerRunning = true;
-    }
-
-    public void startJobTimer() {
-        spawnTime = System.currentTimeMillis();
-        jobTimerRunning = true;
-    }
-
     // to update the timer every MS
     public void updateTimer() {
-        if (!waitingTimerRunning && inQueue) return;
+        if (inQueue) {
+            waitingTimeLeft -= System.currentTimeMillis() - spawnTime;
+            spawnTime = System.currentTimeMillis();
 
-        else if (inQueue) {
-            long elapsedTime = System.currentTimeMillis() - spawnTime;
-
-            if (elapsedTime >= WAITING_TIME) {
+            if (waitingTimeLeft < 0f) {
                 waitingTimerRunning = false;
                 waitingTimerColor = Color.BLACK; // Expired
                 return;
             }
 
-            float progress = (float) elapsedTime / WAITING_TIME;
+            float progress = (float) (WAITING_TIME - waitingTimeLeft) / WAITING_TIME;
             int red = 255;
             int greenBlue = (int) (255 * (1 - progress)); // fades from white -> red
 
             waitingTimerColor = Color.rgb(red, greenBlue, greenBlue);
         }
-
         else {
-            long elapsedTime = System.currentTimeMillis() - spawnTime;
-            if (elapsedTime >= JOB_TIME) {
-                jobTimerRunning = false;
-                jobTimerColor = Color.GREEN; // Expired
+            long elapsed_time = System.currentTimeMillis() - spawnTime;
+
+            if (elapsed_time >= JOB_TIME) {
+                jobDone = true;
+                isComplete = random.nextInt(100) > 90;
                 return;
             }
 
-            float progress = (float) elapsedTime / JOB_TIME;
+            float progress = (float) elapsed_time / JOB_TIME;
             int green = 255;
-            int redBlue = (int) (255 * (1 - progress)); // fades from white -> red
+            int redBlue = (int) (255 * (1 - progress)); // fades from white -> green
 
             jobTimerColor = Color.rgb(redBlue, green, redBlue);
         }
     }
 
-    public void setStartTime(long spawnTime) {
-        this.spawnTime = spawnTime;
+    public void reset() {
+        inQueue = true;
+        waitingTimeLeft = WAITING_TIME;
     }
 
     // draw the timer
@@ -95,28 +86,17 @@ public class CustomerGroup {
         PointF pos = getCurrent();
         if (pos == null) return; // Don't draw if position is not set
 
-        paint.setColor(waitingTimerColor);
         paint.setTextSize(40);
 
         float timeLeftSec = 0;
-        if (waitingTimerRunning) {
-            timeLeftSec = Math.max(0, (WAITING_TIME - (System.currentTimeMillis() - spawnTime)) / 1000f);
-        }
-
-        if (jobTimerRunning) {
+        if (inQueue) {
+            timeLeftSec = Math.max(0, waitingTimeLeft / 1000f);
+            paint.setColor(waitingTimerColor);
+        } else {
             timeLeftSec = Math.max(0, (JOB_TIME - (System.currentTimeMillis() - spawnTime)) / 1000f);
+            paint.setColor(jobTimerColor);
         }
 
         canvas.drawText(String.format("%.1fs", timeLeftSec), pos.x, pos.y + 110, paint);
-    }
-
-    public void stopWaitingTimer() {
-        waitingTimerRunning = false;
-//        WAITING_TIME = System.currentTimeMillis() - spawnTime;
-    }
-
-    public void stopJobTimer() {
-        jobTimerRunning = false;
-//        JOB_TIME = System.currentTimeMillis() - spawnTime;
     }
 }
