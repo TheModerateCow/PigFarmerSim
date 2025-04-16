@@ -1,9 +1,19 @@
 package com.example.pigfarmersim;
 
+import com.example.pigfarmersim.entities.CustomerGroup;
+import com.example.pigfarmersim.CustomerSpawner;
+
+import java.util.List;
+
 public class GameLoop implements Runnable {
     private Thread gameThread;
     private GamePanel gamePanel;
     public volatile boolean running = false; // Added running flag
+
+    private CustomerSpawner customerSpawner;
+
+    public List<CustomerGroup> customers;
+
 
     public GameLoop(GamePanel gamePanel) {
         this.gamePanel = gamePanel;
@@ -12,7 +22,7 @@ public class GameLoop implements Runnable {
 
     @Override
     public void run() {
-
+//        customers = customerSpawner.getCustomerGroups();
         long lastFPScheck = System.currentTimeMillis();
         int fps = 0;
 
@@ -28,6 +38,10 @@ public class GameLoop implements Runnable {
             gamePanel.update(delta);
             gamePanel.render();
             lastDelta = nowDelta;
+
+//            for (CustomerGroup customer: customers) {
+//                //If customer time
+//            }
 
             fps++;
 

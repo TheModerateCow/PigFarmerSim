@@ -15,6 +15,7 @@ public class CustomerSpawner {
     private long lastSpawnTime;
     private long nextSpawnDelay; // milliseconds
 
+
     public CustomerSpawner() {
         lastSpawnTime = SystemClock.elapsedRealtime();
         nextSpawnDelay = getRandomSpawnDelay();
@@ -27,13 +28,15 @@ public class CustomerSpawner {
     public void update() {
         long currentTime = SystemClock.elapsedRealtime();
         if (currentTime - lastSpawnTime >= nextSpawnDelay && customers.size() < 5) {
-            spawnCustomer();
             lastSpawnTime = currentTime;
+            spawnCustomer(lastSpawnTime);
             nextSpawnDelay = getRandomSpawnDelay();
         }
     }
 
-    private void spawnCustomer() {
+    private void spawnCustomer(long lastSpawnTime) {
+        CustomerGroup customer = new CustomerGroup();
+        customer.setSpawnTime(lastSpawnTime);
         customers.add(new CustomerGroup());
     }
 

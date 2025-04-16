@@ -56,6 +56,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private int customerDir = GameConstants.Face_Dir.DOWN;
     private int customerFrame = 0;
     private long frameTime = System.currentTimeMillis();
+    private long IOframeTime = System.currentTimeMillis();
     private int playerAniIndexY, playerFaceDir = GameConstants.Face_Dir.RIGHT;
     private int aniTick;
     private int aniSpeed = 10;
@@ -87,6 +88,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final RectF endGameButton;
     private final float cameraXMin = 0; // Right-most
     private final float cameraXMax = MainActivity.GAME_HEIGHT; // Left-most
+
 
 
 
@@ -353,20 +355,25 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update(double delta) {
-        if (System.currentTimeMillis() - lastDirChange >= 3000) {
-            lastDirChange = System.currentTimeMillis();
-            customerDir = (customerDir + 1) % 4;
+        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
+            customer.updateTimer();
+            if (System.currentTimeMillis() - IOframeTime >= 2000) {
+                int IOChance = random.nextInt(100);
+                if (IOChance < 5) {
+                    customer.setOnIOEvent(true);
+                    customer.saveJobTimeLeft();
+
+                }
+            }
+
         }
+        IOframeTime = System.currentTimeMillis();
 
         if (System.currentTimeMillis() - frameTime >= 1000) {
             customerFrame = (customerFrame + 1) % 4;
             frameTime = System.currentTimeMillis();
         }
 
-        // for customer timer
-        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
-            customer.updateTimer();
-        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -446,12 +453,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         queueManager.returnFreeTables(customer);
                         if (customer.isComplete) {
                             // TODO iterator for customers and remove complete
+                            customerSpawner.customers.remove(customer);
                         } else if (customer.jobDone) {
                             customer.reset();
                         } else {
                             customer.inQueue = true;
                         }
-
                     }
                 }
             }
