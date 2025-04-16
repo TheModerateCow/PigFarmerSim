@@ -25,6 +25,7 @@ import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.inputs.TouchEvents;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -395,7 +396,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         List<CustomerGroup> customersToRemove = new ArrayList<>();
 
-        System.out.println("WORK3");
         // for customer timer
         for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
             customer.updateTimer();
@@ -415,6 +415,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
                 queueManager.returnFreeTables(customer);
+                noOfProcesses.remove(customer);
             }
         }
 
@@ -500,13 +501,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 isPaused = true;
                 return true;
             }
-            for (CustomerGroup customer : customers) {
+
+            Iterator<CustomerGroup> iterator = customers.iterator();
+            while (iterator.hasNext()) {
+                CustomerGroup customer = iterator.next();
                 PointF custPos = customer.getCurrent();
                 // Define the bounding box dimensions for the customer
                 float left = custPos.x;
                 float top = custPos.y;
-                float right = left + 100;   // customerWidth could be a constant or a customer property.
-                float bottom = top + 150;    // Same for customerHeight.
+                float right = left + 100;   // customerWidth could be a constant or property.
+                float bottom = top + 150;   // Same for customerHeight.
 
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
@@ -523,13 +527,13 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     } else {
                         queueManager.returnFreeTables(customer);
                         if (customer.isComplete) {
-                            // TODO iterator for customers and remove complete
-                            customerSpawner.customers.remove(customer);
-                            noOfProcesses.remove(customer);
+                            // Use the iterator's remove method
+                            iterator.remove();
                         } else if (customer.jobDone) {
                             customer.reset();
                         } else {
                             customer.inQueue = true;
+                            noOfProcesses.remove(customer);
                         }
                     }
                 }
