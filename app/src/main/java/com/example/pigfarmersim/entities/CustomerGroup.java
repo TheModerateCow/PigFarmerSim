@@ -42,8 +42,10 @@ public class CustomerGroup {
     }
 
     public PointF getCurrent() {
-        if (inQueue) return queuePoint;
-        else return listPoints.get(0);
+        if (inQueue)
+            return queuePoint;
+        else
+            return listPoints.get(0);
     }
 
     // to update the timer every MS
@@ -96,7 +98,8 @@ public class CustomerGroup {
     // draw the timer
     public void drawTimer(Canvas canvas, Paint paint) {
         PointF pos = getCurrent();
-        if (pos == null) return; // Don't draw if position is not set
+        if (pos == null)
+            return; // Don't draw if position is not set
 
         paint.setTextSize(40);
 
@@ -116,13 +119,19 @@ public class CustomerGroup {
         this.spawnTime = lastSpawnTime;
     }
 
-//    public boolean getIsOnIOEvent() {
-//        return this.isOnIO;
-//    }
     public void setOnIOEvent(boolean onIOEvent)  {
         if (onIOEvent == true) {
             this.IOStartTime = System.currentTimeMillis();
         }
         this.isOnIO = onIOEvent;
+    }
+
+    public boolean isWaitingTimerExpired() {
+        return !waitingTimerRunning && waitingTimerColor == Color.BLACK;
+    }
+
+    // Check if job timer completed (customer successfully served)
+    public boolean isJobCompleted() {
+        return !jobTimerRunning && jobTimerColor == Color.GREEN;
     }
 }

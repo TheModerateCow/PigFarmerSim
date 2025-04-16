@@ -105,7 +105,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private static final int STATE_WAITING_IO = 4;
     private static final int STATE_MOVING_FROM_WAIT_AREA = 5;
     private static final int STATE_LEAVING = 6;         // Example state
-    private int score = 0; // Or start with your desired initial score
+    private int score = 100; // Or start with your desired initial score
     private final Paint scorePaint;
 
     // for customer spawner
@@ -218,14 +218,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         scorePaint.setTextSize(100);
         scorePaint.setTextAlign(Paint.Align.CENTER); // Center alignment
         scorePaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+
+        System.out.println("WHEO");
     }
 
     public GameLoop getGameLoop() {
+        System.out.println("WORK1");
         return gameLoop;
     }
 
     public void render() {
-
+        System.out.println("WORK");
         // Clamp AFTER easing to avoid sharp stops mid-drag
         cameraX = Math.max(cameraXMin, Math.min(cameraXMax, cameraTargetX));
 
@@ -303,7 +306,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             // Draw title
             c.drawText("GAME OVER",
-                    MainActivity.GAME_WIDTH / 2,
+                    (float) MainActivity.GAME_WIDTH / 2,
                     endScreenBgRect.top + 150,
                     titleTextPaint);
 
@@ -325,14 +328,20 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
-            if (group.inQueue == false) {
-                for (PointF pos: group.listPoints) {
+        List<CustomerGroup> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
+
+        for (CustomerGroup group : customersCopy) {
+            if (!group.inQueue) {
+                for (PointF pos : group.listPoints) {
                     c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
                 }
                 continue;
-            };
-            if (group.queuePoint == null) { group.queuePoint = queueManager.getFreeQueue(); }
+            }
+
+            if (group.queuePoint == null) {
+                group.queuePoint = queueManager.giveFreeQueue();
+            }
+
             PointF pos = group.queuePoint;
 
             // draw sprite at position
@@ -347,7 +356,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         // for customer timer
         Paint timerPaint = new Paint();
 
-        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
+        for (CustomerGroup group : customersCopy) {
             group.drawTimer(c, timerPaint);
         }
 
@@ -374,6 +383,32 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             frameTime = System.currentTimeMillis();
         }
 
+        List<CustomerGroup> customersToRemove = new ArrayList<>();
+
+        System.out.println("WORK3");
+        // for customer timer
+        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
+            customer.updateTimer();
+
+            // Check for waiting timer expiration
+            if (customer.isWaitingTimerExpired()) {
+                // Customer left because they waited too long
+                score -= 10 * customer.groupSize;
+                customersToRemove.add(customer);
+                queueManager.returnFreeQueue(customer.queuePoint);
+            }
+
+            // Check for job completion
+            if (customer.isJobCompleted()) {
+                // Customer served successfully
+                score += 20 * customer.groupSize;
+                customersToRemove.add(customer);
+                queueManager.returnFreeQueue(customer.queuePoint);
+                queueManager.returnFreeTables(customer);
+            }
+        }
+
+        customerSpawner.customers.removeAll(customersToRemove);
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -446,7 +481,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
-                    if (customer.inQueue == true) {
+                    if (customer.inQueue) {
                         queueManager.giveFreeTables(customer);
                         customer.inQueue = false;
                     } else {
@@ -463,7 +498,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         }
-            return true;
+        return true;
     }
 
     public void resetAnimation() {
@@ -481,6 +516,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
         // Initialize resources and start the game loop
         initializeGameObjects();
+        System.out.println("WORK2");
         gameLoop.startGameLoop();
     }
 
@@ -521,6 +557,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
         // Clean up resources and stop the game loop safely
+    }
+
+    public synchronized void addScore(float timeServed) {
+        this.score += (int) (timeServed / 20 * 100);
     }
 
     public void setPlayerMoveFalse() {
