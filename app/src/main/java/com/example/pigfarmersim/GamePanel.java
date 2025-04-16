@@ -362,6 +362,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update(double delta) {
+        if (System.currentTimeMillis() - lastDirChange >= 3000) {
+            customerDir = (customerDir + 1) % 4;
+            lastDirChange = System.currentTimeMillis();
+        }
+
         if (System.currentTimeMillis() - frameTime >= 1000) {
             customerFrame = (customerFrame + 1) % 4;
             frameTime = System.currentTimeMillis();
