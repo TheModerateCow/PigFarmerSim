@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.media.MediaPlayer;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -406,6 +407,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         // for max process size flashing
         if (shouldFlash) {
+            MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.error);
+            mp.start();
+            // Optionally, release the MediaPlayer when done to free resources:
+            mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    mp.release();
+                }
+            });
             long currentTime = System.currentTimeMillis();
             long elapsed = currentTime - flashStartTime;
 
@@ -507,6 +517,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
                     if (customer.inQueue) {
+                        MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.mysound);
+                        mp.start();
+                        // Optionally, release the MediaPlayer when done to free resources:
+                        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                mp.release();
+                            }
+                        });
                         if (noOfProcesses.size() < 3) {
                             queueManager.giveFreeTables(customer);
                             customer.inQueue = false;
@@ -618,6 +637,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void gameOver() {
+        MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.gamend);
+        mp.start();
+        // Optionally, release the MediaPlayer when done to free resources:
+        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+            }
+        });
         showEndScreen();
         // You might want to save the score here
     }
