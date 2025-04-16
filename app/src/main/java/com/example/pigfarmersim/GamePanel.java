@@ -590,25 +590,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
-    // for max process size flashing
-    private void updateFlashing() {
-        if (noOfProcesses.size() >= 3) {
-            long currentTime = System.currentTimeMillis();
-
-            if (flashStartTime == 0) {
-                flashStartTime = currentTime;
-            }
-
-            if (currentTime - flashStartTime >= FLASH_INTERVAL) {
-                flashOn = !flashOn;
-                flashStartTime = currentTime;
-            }
-        } else {
-            flashStartTime = 0;
-            flashOn = false;
-        }
-    }
-
     public void gameOver() {
         showEndScreen();
         // You might want to save the score here
