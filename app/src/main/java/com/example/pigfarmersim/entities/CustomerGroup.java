@@ -125,4 +125,12 @@ public class CustomerGroup {
         }
         this.isOnIO = onIOEvent;
     }
+    public boolean isWaitingTimerExpired() {
+        return !waitingTimerRunning && waitingTimerColor == Color.BLACK;
+    }
+
+    // Check if job timer completed (customer successfully served)
+    public boolean isJobCompleted() {
+        return !jobTimerRunning && jobTimerColor == Color.GREEN;
+    }
 }

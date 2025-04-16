@@ -74,14 +74,12 @@ public class TableManager {
     public List<PointF> getUpstairTables() { return upstairTables; }
 
     public synchronized void drawAll(Canvas c) {
-        Iterator<PointF> posIter = downstairTables.iterator();
-        while (posIter.hasNext()) {
-            PointF pos = posIter.next();
+        List<PointF> downstairTablesCopy = new ArrayList<>(downstairTables);
+        List<PointF> upstairTablesCopy = new ArrayList<>(upstairTables);
+        for (PointF pos : downstairTablesCopy) {
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
-        posIter = upstairTables.iterator();
-        while (posIter.hasNext()) {
-            PointF pos = posIter.next();
+        for (PointF pos : upstairTablesCopy) {
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
     }

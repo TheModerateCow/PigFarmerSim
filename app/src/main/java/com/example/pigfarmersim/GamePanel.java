@@ -325,7 +325,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
+        List<CustomerGroup> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
+
+        for (CustomerGroup group : customersCopy) {
             if (group.inQueue == false) {
                 for (PointF pos: group.listPoints) {
                     c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
@@ -347,7 +349,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         // for customer timer
         Paint timerPaint = new Paint();
 
-        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
+        for (CustomerGroup group : customersCopy) {
             group.drawTimer(c, timerPaint);
         }
 
@@ -373,6 +375,37 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             customerFrame = (customerFrame + 1) % 4;
             frameTime = System.currentTimeMillis();
         }
+
+        List<CustomerGroup> customersToRemove = new ArrayList<>();
+
+        // for customer timer
+        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
+            customer.updateTimer();
+
+            // Check for waiting timer expiration
+            if (customer.isWaitingTimerExpired()) {
+                // Customer left because they waited too long
+                score -= 10 * customer.groupSize;
+                customersToRemove.add(customer);
+                queueManager.giveFreeQueue(customer.queuePoint);
+            }
+
+            // Check for job completion
+            if (customer.isJobCompleted()) {
+                // Customer served successfully
+                score += 20 * customer.groupSize;
+                customersToRemove.add(customer);
+                queueManager.giveFreeQueue(customer.queuePoint);
+                queueManager.returnFreeTables(customer);
+            }
+        }
+
+        customerSpawner.customers.removeAll(customersToRemove);
+
+        if (score <= 0) {
+            gameOver();
+        }
+
 
     }
 
@@ -406,7 +439,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 showEndScreen();
                 return true;
             }
-            return true;
         }
 
         // Check for pause button press
@@ -416,7 +448,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             if (pauseButton.contains(touchX, touchY)) {
                 isPaused = true;
-                return true;
+//                return true;
             }
         }
 
@@ -434,7 +466,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             // Check for pause button press if touch isn't on the player.
             if (pauseButton.contains(touchX, touchY)) {
                 isPaused = true;
-                return true;
+//                return true;
             }
             for (CustomerGroup customer : customers) {
                 PointF custPos = customer.getCurrent();
@@ -463,7 +495,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 }
             }
         }
-            return true;
+        return true;
     }
 
     public void resetAnimation() {
