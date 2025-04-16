@@ -489,6 +489,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             while (iterator.hasNext()) {
                 CustomerGroup customer = iterator.next();
                 PointF custPos = customer.getCurrent();
+
+                while (iterator.hasNext() && custPos == null) {
+                    customer = iterator.next();
+                    custPos = customer.getCurrent();
+                }
+
+                if (custPos == null) {
+                    return true;
+                }
                 // Define the bounding box dimensions for the customer
                 float left = custPos.x;
                 float top = custPos.y;
