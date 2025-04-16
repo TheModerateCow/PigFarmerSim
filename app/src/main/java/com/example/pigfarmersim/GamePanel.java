@@ -25,6 +25,7 @@ import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.inputs.TouchEvents;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -88,8 +89,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final RectF endGameButton;
     private final float cameraXMin = 0; // Right-most
     private final float cameraXMax = MainActivity.GAME_HEIGHT; // Left-most
-
-
 
 
     // Add these state constants near the top of GamePanel class
@@ -219,16 +218,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         scorePaint.setTextAlign(Paint.Align.CENTER); // Center alignment
         scorePaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
-        System.out.println("WHEO");
+//        System.out.println("WHEO");
     }
 
     public GameLoop getGameLoop() {
-        System.out.println("WORK1");
+//        System.out.println("WORK1");
         return gameLoop;
     }
 
     public void render() {
-        System.out.println("WORK");
+//        System.out.println("WORK");
         // Clamp AFTER easing to avoid sharp stops mid-drag
         cameraX = Math.max(cameraXMin, Math.min(cameraXMax, cameraTargetX));
 
@@ -369,6 +368,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             if (System.currentTimeMillis() - IOframeTime >= 2000) {
                 int IOChance = random.nextInt(100);
                 if (IOChance < 5) {
+                    System.out.println("Customer entered IO");
                     customer.setOnIOEvent(true);
                     customer.saveJobTimeLeft();
 
@@ -385,7 +385,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         List<CustomerGroup> customersToRemove = new ArrayList<>();
 
-        System.out.println("WORK3");
+//        System.out.println("WORK3");
         // for customer timer
         for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
             customer.updateTimer();
@@ -471,13 +471,41 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 isPaused = true;
                 return true;
             }
-            for (CustomerGroup customer : customers) {
+//            for (CustomerGroup customer : customers) {
+//                PointF custPos = customer.getCurrent();
+//                // Define the bounding box dimensions for the customer
+//                float left = custPos.x;
+//                float top = custPos.y;
+//                float right = left + 100;   // customerWidth could be a constant or a customer property.
+//                float bottom = top + 150;    // Same for customerHeight.
+//
+//                // Check if the touch is within this customer's bounds
+//                if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
+//                    if (customer.inQueue) {
+//                        queueManager.giveFreeTables(customer);
+//                        customer.inQueue = false;
+//                    } else {
+//                        queueManager.returnFreeTables(customer);
+//                        if (customer.isComplete) {
+//                            // TODO iterator for customers and remove complete
+//                            customerSpawner.customers.remove(customer);
+//                        } else if (customer.jobDone) {
+//                            customer.reset();
+//                        } else {
+//                            customer.inQueue = true;
+//                        }
+//                    }
+//                }
+//            }
+            Iterator<CustomerGroup> iterator = customers.iterator();
+            while (iterator.hasNext()) {
+                CustomerGroup customer = iterator.next();
                 PointF custPos = customer.getCurrent();
                 // Define the bounding box dimensions for the customer
                 float left = custPos.x;
                 float top = custPos.y;
-                float right = left + 100;   // customerWidth could be a constant or a customer property.
-                float bottom = top + 150;    // Same for customerHeight.
+                float right = left + 100;   // customerWidth could be a constant or property.
+                float bottom = top + 150;   // Same for customerHeight.
 
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
@@ -487,8 +515,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     } else {
                         queueManager.returnFreeTables(customer);
                         if (customer.isComplete) {
-                            // TODO iterator for customers and remove complete
-                            customerSpawner.customers.remove(customer);
+                            // Use the iterator's remove method
+                            iterator.remove();
                         } else if (customer.jobDone) {
                             customer.reset();
                         } else {
@@ -516,7 +544,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
         // Initialize resources and start the game loop
         initializeGameObjects();
-        System.out.println("WORK2");
+//        System.out.println("WORK2");
         gameLoop.startGameLoop();
     }
 
