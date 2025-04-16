@@ -35,6 +35,4 @@ public enum GameCharacters implements BitmapMethods {
     public Bitmap getSprite(int yPos, int xPos) {
         return sprites[yPos][xPos];
     }
-
-
 }

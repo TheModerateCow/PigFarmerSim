@@ -49,9 +49,9 @@ public class QueueManager {
             float x = startX + spacingX;
             for (int col = 0; col < OUTSIDE_COLS; col++) {
                 freeQueues.add(new PointF(x, y)); // ← save in world coordinates
-                x +=  4 * GameConstants.Sprite.DEFAULT_SIZE + spacingX;
+                x += 4 * GameConstants.Sprite.DEFAULT_SIZE + spacingX;
             }
-            y +=  4 * GameConstants.Sprite.DEFAULT_SIZE + spacingY;
+            y += 4 * GameConstants.Sprite.DEFAULT_SIZE + spacingY;
         }
     }
 
@@ -60,12 +60,17 @@ public class QueueManager {
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
     }
-    public PointF getFreeQueue() {
-        if (freeQueues.isEmpty()) {return null; }
+
+    public PointF giveFreeQueue() {
+        if (freeQueues.isEmpty()) {
+            return null;
+        }
         return freeQueues.remove(0);
     }
 
-    public void giveFreeQueue(PointF point) { freeQueues.add(point); }
+    public void returnFreeQueue(PointF point) {
+        freeQueues.add(point);
+    }
 
     public void giveFreeTables(CustomerGroup group) {
         List<PointF> freeTables = new ArrayList<>();
@@ -85,7 +90,7 @@ public class QueueManager {
     }
 
     public void returnFreeTables(CustomerGroup group) {
-        for (PointF pos: group.listPoints) {
+        for (PointF pos : group.listPoints) {
             if (upstairTables.contains(pos)) freeUpstairTables.add(pos);
             else freeDownstairTables.add(pos);
         }

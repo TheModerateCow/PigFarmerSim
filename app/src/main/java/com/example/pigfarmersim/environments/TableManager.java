@@ -3,6 +3,7 @@ package com.example.pigfarmersim.environments;
 import android.graphics.Canvas;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +25,7 @@ public class TableManager {
     private final int UPSTAIRS_TABLES = 10;
 
     public TableManager() {
-        limits.put("downstairs", new Bounds(270f, 580f,270f,1536f));
+        limits.put("downstairs", new Bounds(270f, 580f, 270f, 1536f));
         limits.put("upstairs", new Bounds(650f, 960f, 270f, 1536f));
         generateTableLayout();
     }
@@ -70,13 +71,19 @@ public class TableManager {
     public List<PointF> getDownstairTables() {
         return downstairTables;
     }
-    public List<PointF> getUpstairTables() { return upstairTables; }
+
+    public List<PointF> getUpstairTables() {
+        return upstairTables;
+    }
 
     public void drawAll(Canvas c) {
-        for (PointF pos : downstairTables) {
+        List<PointF> downstairTablesCopy = new ArrayList<>(downstairTables);
+        List<PointF> upstairTablesCopy = new ArrayList<>(upstairTables);
+
+        for (PointF pos : downstairTablesCopy) {
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
-        for (PointF pos : upstairTables) {
+        for (PointF pos : upstairTablesCopy) {
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
     }
