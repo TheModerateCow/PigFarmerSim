@@ -349,7 +349,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 continue;
             }
 
-            if (group.queuePoint == null) {
+            while (group.queuePoint == null) {
                 group.queuePoint = queueManager.giveFreeQueue();
             }
 
@@ -405,7 +405,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 // Customer left because they waited too long
                 score -= 10 * customer.groupSize;
                 customersToRemove.add(customer);
-                queueManager.giveFreeQueue(customer.queuePoint);
+                queueManager.giveFreeQueue();
             }
 
             // Check for job completion
@@ -413,7 +413,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 // Customer served successfully
                 score += 20 * customer.groupSize;
                 customersToRemove.add(customer);
-                queueManager.giveFreeQueue(customer.queuePoint);
+                queueManager.giveFreeQueue();
                 queueManager.returnFreeTables(customer);
                 noOfProcesses.remove(customer);
             }
@@ -439,10 +439,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         customerSpawner.customers.removeAll(customersToRemove);
-
-        if (score <= 0) {
-            gameOver();
-        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -506,6 +502,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             }
             for (CustomerGroup customer : customers) {
                 PointF custPos = customer.getCurrent();
+
+                if (custPos == null) {
+                    continue;
+                }
                 // Define the bounding box dimensions for the customer
                 float left = custPos.x;
                 float top = custPos.y;
