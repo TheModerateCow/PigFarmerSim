@@ -109,6 +109,16 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     // for customer spawner
     private CustomerSpawner customerSpawner;
 
+    // for max process size
+    private List<CustomerGroup> noOfProcesses;
+
+    // for max process size flashing
+    private boolean shouldFlash = false;
+    private long flashStartTime = 0;
+    private boolean flashOn = false;
+    private static final long FLASH_DURATION = 1000; // total duration of flashing (e.g., 1s)
+    private static final long FLASH_INTERVAL = 100; // how often it blinks
+
     /**
      * Constructs a new GamePanel with the specified context.
      *
@@ -216,6 +226,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         scorePaint.setTextSize(100);
         scorePaint.setTextAlign(Paint.Align.CENTER); // Center alignment
         scorePaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
+
+        // for max process size
+        noOfProcesses = new ArrayList<>();
     }
 
     public GameLoop getGameLoop() {
@@ -367,6 +380,25 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
             customer.updateTimer();
         }
+
+        // for max process size flashing
+        if (shouldFlash) {
+            long currentTime = System.currentTimeMillis();
+            long elapsed = currentTime - flashStartTime;
+
+            if (elapsed >= FLASH_DURATION) {
+                shouldFlash = false; // Stop flashing
+                scorePaint.setColor(Color.BLACK); // Reset to default
+            } else {
+                if ((elapsed / FLASH_INTERVAL) % 2 == 0) {
+                    scorePaint.setColor(Color.YELLOW);
+                } else {
+                    scorePaint.setColor(Color.WHITE);
+                }
+            }
+
+//            canvas.drawText("Max 3 customers at a time!", 100, 100, scoreTextPaint);
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -440,12 +472,19 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
                     if (customer.inQueue == true) {
-                        queueManager.giveFreeTables(customer);
-                        customer.inQueue = false;
+                        if (noOfProcesses.size() < 3) {
+                            queueManager.giveFreeTables(customer);
+                            customer.inQueue = false;
 
-                        // for customer timer
-                        customer.stopWaitingTimer();
-                        customer.startJobTimer();
+                            // for customer timer
+                            customer.stopWaitingTimer();
+                            customer.startJobTimer();
+                            noOfProcesses.add(customer);
+                        } else {
+                            shouldFlash = true;
+                            flashStartTime = System.currentTimeMillis();
+                            flashOn = true; // optional: start with yellow
+                        }
                     } else {
                         queueManager.returnFreeTables(customer);
                         customer.inQueue = true;
@@ -453,6 +492,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         // for customer reset timer
                         customer.stopJobTimer();
                         customer.startWaitingTimer();
+                        noOfProcesses.remove(customer);
                     }
                 }
             }
@@ -547,6 +587,25 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         Context context = getContext();
         if (context instanceof MainActivity) {
             ((MainActivity) context).finishGame();
+        }
+    }
+
+    // for max process size flashing
+    private void updateFlashing() {
+        if (noOfProcesses.size() >= 3) {
+            long currentTime = System.currentTimeMillis();
+
+            if (flashStartTime == 0) {
+                flashStartTime = currentTime;
+            }
+
+            if (currentTime - flashStartTime >= FLASH_INTERVAL) {
+                flashOn = !flashOn;
+                flashStartTime = currentTime;
+            }
+        } else {
+            flashStartTime = 0;
+            flashOn = false;
         }
     }
 
