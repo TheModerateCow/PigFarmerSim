@@ -25,7 +25,7 @@ public class TableManager {
     private final int UPSTAIRS_TABLES = 10;
 
     public TableManager() {
-        limits.put("downstairs", new Bounds(270f, 580f,270f,1536f));
+        limits.put("downstairs", new Bounds(270f, 580f, 270f, 1536f));
         limits.put("upstairs", new Bounds(650f, 960f, 270f, 1536f));
         generateTableLayout();
     }
@@ -71,11 +71,15 @@ public class TableManager {
     public List<PointF> getDownstairTables() {
         return downstairTables;
     }
-    public List<PointF> getUpstairTables() { return upstairTables; }
 
-    public synchronized void drawAll(Canvas c) {
+    public List<PointF> getUpstairTables() {
+        return upstairTables;
+    }
+
+    public void drawAll(Canvas c) {
         List<PointF> downstairTablesCopy = new ArrayList<>(downstairTables);
         List<PointF> upstairTablesCopy = new ArrayList<>(upstairTables);
+
         for (PointF pos : downstairTablesCopy) {
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
