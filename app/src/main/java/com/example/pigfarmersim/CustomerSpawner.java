@@ -28,16 +28,14 @@ public class CustomerSpawner {
     public void update() {
         long currentTime = SystemClock.elapsedRealtime();
         if (currentTime - lastSpawnTime >= nextSpawnDelay && customers.size() < 5) {
-            lastSpawnTime = currentTime;
-            spawnCustomer(lastSpawnTime);
+            spawnCustomer();
             nextSpawnDelay = getRandomSpawnDelay();
         }
     }
 
-    private void spawnCustomer(long lastSpawnTime) {
-        CustomerGroup customer = new CustomerGroup();
-        customer.setSpawnTime(lastSpawnTime);
+    private void spawnCustomer() {
         customers.add(new CustomerGroup());
+        lastSpawnTime = SystemClock.elapsedRealtime();
     }
 
     public List<CustomerGroup> getCustomerGroups() {

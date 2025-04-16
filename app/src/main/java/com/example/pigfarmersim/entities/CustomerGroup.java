@@ -14,22 +14,15 @@ public class CustomerGroup {
     public int groupSize; // 1 to 4
     public boolean inQueue = true;
     public boolean jobDone = false;
-    public boolean isComplete = false;
+    public boolean waitExpire = false;
     private static final Random random = new Random();
     public PointF queuePoint = null;
     public List<PointF> listPoints = new ArrayList<>();
     // for timer
     private static final long WAITING_TIME = 20000; // 20 seconds
     private long waitingTimeLeft = WAITING_TIME;
-    private long IOStartTime;
     private static final long JOB_TIME = 5000;
-    private long jobTimeLeft = JOB_TIME;
-
-    private long saveJobTimeLeft;
     private long spawnTime;
-    private boolean waitingTimerRunning = false;
-    private boolean jobTimerRunning = false;
-    private boolean isOnIO = false;
     public int waitingTimerColor = Color.WHITE; // exposed for drawing
     public int jobTimerColor = Color.WHITE;
 
@@ -55,8 +48,7 @@ public class CustomerGroup {
             spawnTime = System.currentTimeMillis();
 
             if (waitingTimeLeft < 0f) {
-                waitingTimerRunning = false;
-                waitingTimerColor = Color.BLACK; // Expired
+                waitExpire = true;
                 return;
             }
 
@@ -68,10 +60,8 @@ public class CustomerGroup {
         }
         else {
             long elapsed_time = System.currentTimeMillis() - spawnTime;
-            this.jobTimeLeft = elapsed_time;
             if (elapsed_time >= JOB_TIME) {
                 jobDone = true;
-                isComplete = random.nextInt(100) > 50;
                 return;
             }
 
@@ -81,16 +71,6 @@ public class CustomerGroup {
 
             jobTimerColor = Color.rgb(redBlue, green, redBlue);
         }
-    }
-
-    public long saveJobTimeLeft() {
-        this.saveJobTimeLeft = this.jobTimeLeft;
-        return this.saveJobTimeLeft;
-    }
-
-    public void reset() {
-        inQueue = true;
-        waitingTimeLeft = WAITING_TIME;
     }
 
     // draw the timer
@@ -111,25 +91,5 @@ public class CustomerGroup {
         }
 
         canvas.drawText(String.format("%.1fs", timeLeftSec), pos.x, pos.y + 110, paint);
-    }
-
-    public void setSpawnTime(long lastSpawnTime) {
-        this.spawnTime = lastSpawnTime;
-    }
-
-    public void setOnIOEvent(boolean onIOEvent)  {
-        if (onIOEvent == true) {
-            this.IOStartTime = System.currentTimeMillis();
-        }
-        this.isOnIO = onIOEvent;
-    }
-
-    public boolean isWaitingTimerExpired() {
-        return !waitingTimerRunning && waitingTimerColor == Color.BLACK;
-    }
-
-    // Check if job timer completed (customer successfully served)
-    public boolean isJobCompleted() {
-        return !jobTimerRunning && jobTimerColor == Color.GREEN;
     }
 }
