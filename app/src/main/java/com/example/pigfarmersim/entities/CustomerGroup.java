@@ -88,8 +88,6 @@ public class CustomerGroup {
         return this.saveJobTimeLeft;
     }
 
-
-
     public void reset() {
         inQueue = true;
         waitingTimeLeft = WAITING_TIME;

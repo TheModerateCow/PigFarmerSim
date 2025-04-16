@@ -242,8 +242,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         table_pos = tableManager.getDownstairTables();
 
-        List<CustomerGroup> customers = customerSpawner.getCustomerGroups();
-
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
 
@@ -363,7 +361,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update(double delta) {
-        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
+        List<CustomerGroup> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
+
+        for (CustomerGroup customer : customersCopy) {
             customer.updateTimer();
             if (System.currentTimeMillis() - IOframeTime >= 2000) {
                 int IOChance = random.nextInt(100);
@@ -387,7 +387,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
 //        System.out.println("WORK3");
         // for customer timer
-        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
+        for (CustomerGroup customer : customersCopy) {
             customer.updateTimer();
 
             // Check for waiting timer expiration
@@ -460,7 +460,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             System.out.println("Touch down");
 
-            customers = customerSpawner.getCustomerGroups();
+            List<CustomerGroup> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
 
             float touchX = event.getX();
             float touchY = event.getY();
@@ -497,7 +497,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 //                    }
 //                }
 //            }
-            Iterator<CustomerGroup> iterator = customers.iterator();
+            Iterator<CustomerGroup> iterator = customersCopy.iterator();
             while (iterator.hasNext()) {
                 CustomerGroup customer = iterator.next();
                 PointF custPos = customer.getCurrent();
@@ -553,10 +553,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setColor(Color.WHITE);
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
-
-        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
-
-        }
 
         // for customer spawner
         customerSpawner.update();
