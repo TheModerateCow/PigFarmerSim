@@ -39,10 +39,6 @@ public class GameLoop implements Runnable {
             gamePanel.render();
             lastDelta = nowDelta;
 
-//            for (CustomerGroup customer: customers) {
-//                //If customer time
-//            }
-
             fps++;
 
             long now = System.currentTimeMillis();

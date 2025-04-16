@@ -1,5 +1,6 @@
 package com.example.pigfarmersim;
 
+import static android.os.SystemClock.sleep;
 import static java.lang.Math.abs;
 
 import android.annotation.SuppressLint;
@@ -254,8 +255,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         table_pos = tableManager.getDownstairTables();
 
-        List<CustomerGroup> customers = customerSpawner.getCustomerGroups();
-
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
 
@@ -342,8 +341,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         List<CustomerGroup> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
 
         for (CustomerGroup group : customersCopy) {
-            if (group.inQueue == false) {
-                for (PointF pos: group.listPoints) {
+            if (!group.inQueue) {
+                for (PointF pos : group.listPoints) {
                     c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
                 }
                 continue;
@@ -375,20 +374,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update(double delta) {
-        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
-            customer.updateTimer();
-            if (System.currentTimeMillis() - IOframeTime >= 2000) {
-                int IOChance = random.nextInt(100);
-                if (IOChance < 5) {
-                    customer.setOnIOEvent(true);
-                    customer.saveJobTimeLeft();
-
-                }
-            }
-
-        }
-        IOframeTime = System.currentTimeMillis();
-
         if (System.currentTimeMillis() - frameTime >= 1000) {
             customerFrame = (customerFrame + 1) % 4;
             frameTime = System.currentTimeMillis();
@@ -401,19 +386,19 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             customer.updateTimer();
 
             // Check for waiting timer expiration
-            if (customer.isWaitingTimerExpired()) {
+            if (customer.waitExpire) {
                 // Customer left because they waited too long
                 score -= 10 * customer.groupSize;
                 customersToRemove.add(customer);
-                queueManager.giveFreeQueue();
+                queueManager.returnFreeQueue(customer.queuePoint);
             }
 
             // Check for job completion
-            if (customer.isJobCompleted()) {
+            if (customer.jobDone) {
                 // Customer served successfully
                 score += 20 * customer.groupSize;
                 customersToRemove.add(customer);
-                queueManager.giveFreeQueue();
+                queueManager.returnFreeQueue(customer.queuePoint);
                 queueManager.returnFreeTables(customer);
                 noOfProcesses.remove(customer);
             }
@@ -471,6 +456,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 showEndScreen();
                 return true;
             }
+            return true;
         }
 
         // Check for pause button press
@@ -480,7 +466,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             if (pauseButton.contains(touchX, touchY)) {
                 isPaused = true;
-//                return true;
+                return true;
             }
         }
 
@@ -489,28 +475,25 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             System.out.println("Touch down");
 
-            customers = customerSpawner.getCustomerGroups();
 
             float touchX = event.getX();
             float touchY = event.getY();
-            int spriteSize = GameConstants.Sprite.SIZE;
 
             // Check for pause button press if touch isn't on the player.
             if (pauseButton.contains(touchX, touchY)) {
                 isPaused = true;
-//                return true;
+                return true;
             }
-            for (CustomerGroup customer : customers) {
-                PointF custPos = customer.getCurrent();
 
-                if (custPos == null) {
-                    continue;
-                }
+            Iterator<CustomerGroup> iterator = customerSpawner.customers.iterator();
+            while (iterator.hasNext()) {
+                CustomerGroup customer = iterator.next();
+                PointF custPos = customer.getCurrent();
                 // Define the bounding box dimensions for the customer
                 float left = custPos.x;
                 float top = custPos.y;
-                float right = left + 100;   // customerWidth could be a constant or a customer property.
-                float bottom = top + 150;    // Same for customerHeight.
+                float right = left + 100;   // customerWidth could be a constant or property.
+                float bottom = top + 150;   // Same for customerHeight.
 
                 // Check if the touch is within this customer's bounds
                 if (touchX >= left && touchX <= right && touchY >= top && touchY <= bottom) {
@@ -526,15 +509,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         }
                     } else {
                         queueManager.returnFreeTables(customer);
-                        if (customer.isComplete) {
-                            // TODO iterator for customers and remove complete
-                            customerSpawner.customers.remove(customer);
-                        } else if (customer.jobDone) {
-                            customer.reset();
-                        } else {
-                            customer.inQueue = true;
-                            noOfProcesses.remove(customer);
-                        }
+                        customer.inQueue = true;
+                        noOfProcesses.remove(customer);
                     }
                 }
             }
@@ -565,10 +541,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setColor(Color.WHITE);
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
-
-        for (CustomerGroup group : customerSpawner.getCustomerGroups()) {
-
-        }
 
         // for customer spawner
         customerSpawner.update();
