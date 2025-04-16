@@ -119,13 +119,15 @@ public class CustomerGroup {
         this.spawnTime = lastSpawnTime;
     }
 
+//    public boolean getIsOnIOEvent() {
+//        return this.isOnIO;
+//    }
     public void setOnIOEvent(boolean onIOEvent)  {
         if (onIOEvent == true) {
             this.IOStartTime = System.currentTimeMillis();
         }
         this.isOnIO = onIOEvent;
     }
-
     public boolean isWaitingTimerExpired() {
         return !waitingTimerRunning && waitingTimerColor == Color.BLACK;
     }

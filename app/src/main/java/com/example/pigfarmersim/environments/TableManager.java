@@ -76,10 +76,9 @@ public class TableManager {
         return upstairTables;
     }
 
-    public void drawAll(Canvas c) {
+    public synchronized void drawAll(Canvas c) {
         List<PointF> downstairTablesCopy = new ArrayList<>(downstairTables);
         List<PointF> upstairTablesCopy = new ArrayList<>(upstairTables);
-
         for (PointF pos : downstairTablesCopy) {
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
