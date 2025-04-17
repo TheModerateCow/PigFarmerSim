@@ -1,13 +1,10 @@
 package com.example.pigfarmersim.managers;
 
 import android.graphics.Canvas;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import android.graphics.PointF;
+import android.util.ArraySet;
 
 import com.example.pigfarmersim.entities.CustomerThread;
 import com.example.pigfarmersim.entities.Table;
@@ -17,11 +14,10 @@ import com.example.pigfarmersim.helpers.GameConstants;
 
 
 public class TableManager {
-    public final List<PointF> tablePool = new ArrayList<>();
+    public final Set<PointF> tablePool = new ArraySet<>();
+    private final Object mutex = new Object();
+    private boolean isFull = false;
     private final Map<String, Bounds> limits = new HashMap<>();
-    private final int DOWNSTAIRS_ROWS = 3;
-    private final int UPSTAIRS_ROWS = 2;
-    private final int TOTAL_TABLES = GameConstants.TABLE_SLOTS;
 
     public TableManager() {
         limits.put("downstairs", new Bounds(270f, 580f, 270f, 1536f));
@@ -30,6 +26,9 @@ public class TableManager {
     }
 
     private void generateTableLayout() {
+        final int DOWNSTAIRS_ROWS = 3;
+        final int UPSTAIRS_ROWS = 2;
+        final int TOTAL_TABLES = GameConstants.TABLE_SLOTS;
         int cols = (int) Math.ceil((double) TOTAL_TABLES / (DOWNSTAIRS_ROWS + UPSTAIRS_ROWS));
         float startX = limits.get("downstairs").left * Floor.OUTSIDE.sx;
         float endX = limits.get("downstairs").right * Floor.OUTSIDE.sx;
@@ -64,30 +63,46 @@ public class TableManager {
         }
     }
 
-    public synchronized void drawAll(Canvas c) {
+    public void drawAll(Canvas c) {
         List<PointF> tablePoolCopy = new ArrayList<>(tablePool);
 
         for (PointF pos : tablePoolCopy) {
+            if (pos == null || pos.x == 0 || pos.y == 0) continue;
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
     }
 
-    public synchronized void giveFreeTables(CustomerThread group) {
+    public void giveFreeTables(CustomerThread group) {
         if (tablePool.size() < group.groupSize) {
             return;
         }
 
-        List<PointF> freeTables = new ArrayList<>();
-        Iterator<PointF> tableIter = tablePool.iterator();
-        while (tableIter.hasNext() && freeTables.size() < group.groupSize) {
-            freeTables.add(tableIter.next());
-            tableIter.remove();
-        }
+        synchronized (mutex) {
+            List<PointF> freeTables = new ArrayList<>();
+            Iterator<PointF> tableIter = tablePool.iterator();
+            while (tableIter.hasNext() && freeTables.size() < group.groupSize) {
+                freeTables.add(tableIter.next());
+                tableIter.remove();
+            }
 
-        group.listPoints = freeTables;
+            group.listPoints = freeTables;
+        }
     }
 
-    public synchronized void returnFreeTables(CustomerThread group) {
-        for (PointF pos : group.listPoints) { tablePool.add(pos); }
+    public void returnFreeTables(CustomerThread group) {
+        synchronized (mutex) {
+            tablePool.addAll(group.listPoints);
+        }
+    }
+    public void signalFull() {
+        isFull = true;
+    }
+    public boolean isFull() {
+        if (isFull) { return acknowledgeFull(); }
+        return false;
+    }
+    public boolean acknowledgeFull() {
+        isFull = false;
+        return true;
     }
 }

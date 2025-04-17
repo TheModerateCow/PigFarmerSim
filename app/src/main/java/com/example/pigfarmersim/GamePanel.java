@@ -59,13 +59,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final Paint endOverlayPaint;
     private final Paint endScreenBgPaint;
     private final Paint titleTextPaint;
-    private final Paint scoreTextPaint;
     private final Paint endButtonTextPaint;
     private final RectF endScreenBgRect;
     private final RectF menuButtonRect;
     private final RectF endGameButton;
     private final Paint scorePaint;
-    private List<CustomerThread> noOfProcesses;
+    private final List<CustomerThread> noOfProcesses;
 
     // for max process size flashing
     private boolean shouldFlash = false;
@@ -139,7 +138,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         titleTextPaint.setTextAlign(Paint.Align.CENTER);
         titleTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
-        scoreTextPaint = new Paint();
+        Paint scoreTextPaint = new Paint();
         scoreTextPaint.setColor(Color.BLACK);
         scoreTextPaint.setTextSize(100);
         scoreTextPaint.setTextAlign(Paint.Align.CENTER);
@@ -184,7 +183,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void render() {
-        Canvas c = holder.lockCanvas();
+        Canvas c = null;
+        while (c == null) { c = holder.lockCanvas(); }
         c.drawColor(Color.BLACK);
 
         mapLoader.draw(c);
@@ -310,7 +310,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             if (noOfProcesses.size() >= GameConstants.GAME_PANEL_CONSTANTS.MAX_PROCESSES) {
                 c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
-            } else if (queueManager.queuePool.isEmpty()){
+            } else if (tableManager.isFull()){
                 c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
             }
         }
@@ -337,6 +337,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 // Customer left because they waited too long
                 customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
+                tableManager.returnFreeTables(customer);
             }
 
             // Check for job completion
@@ -459,7 +460,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         mp.start();
                         // Optionally, release the MediaPlayer when done to free resources:
                         mp.setOnCompletionListener(MediaPlayer::release);
-                        if (tableManager.tablePool.size() > customer.groupSize && noOfProcesses.size() < GameConstants.GAME_PANEL_CONSTANTS.MAX_PROCESSES) {
+                        if (tableManager.tablePool.size() < customer.groupSize) {
+                            shouldFlash = true;
+                            flashStartTime = System.currentTimeMillis();
+                            flashOn = true; // optional: start with yellow
+                            tableManager.signalFull();
+                        } else if (noOfProcesses.size() < GameConstants.GAME_PANEL_CONSTANTS.MAX_PROCESSES) {
                             tableManager.giveFreeTables(customer);
                             customer.inQueue = false;
                             noOfProcesses.add(customer);

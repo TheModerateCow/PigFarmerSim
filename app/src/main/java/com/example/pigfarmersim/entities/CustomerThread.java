@@ -14,7 +14,7 @@ import java.util.Random;
 
 public class CustomerThread implements Runnable {
     private Thread thread = null;
-    private ScoreManager scoreManager;
+    private final ScoreManager scoreManager;
     private static final Random random = new Random();
     public int groupSize = random.nextInt(GameConstants.GROUP_CONSTANTS.MAX_SIZE) + 1; // Random group size from 1 to 11
     private boolean running = false;

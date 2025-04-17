@@ -50,7 +50,8 @@ public class QueueManager {
         return queuePool.remove(0);
     }
 
-    public synchronized void returnFreeQueue(PointF point) {
-        if (point != null) queuePool.add(point);
+    public synchronized void returnFreeQueue(PointF pos) {
+        if (pos == null || pos.x == 0 || pos.y == 0) return;
+        queuePool.add(pos);
     }
 }

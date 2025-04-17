@@ -7,12 +7,8 @@ import java.util.List;
 
 public class GameLoop implements Runnable {
     private Thread gameThread;
-    private GamePanel gamePanel;
+    private final GamePanel gamePanel;
     public volatile boolean running = false; // Added running flag
-    private CustomerManager customerManager;
-
-    public List<CustomerThread> customers;
-
 
     public GameLoop(GamePanel gamePanel) {
         this.gamePanel = gamePanel;

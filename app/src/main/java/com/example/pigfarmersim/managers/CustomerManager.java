@@ -3,7 +3,6 @@ package com.example.pigfarmersim.managers;
 import android.os.SystemClock;
 import com.example.pigfarmersim.entities.CustomerThread;
 import com.example.pigfarmersim.helpers.GameConstants;
-import com.google.android.material.color.utilities.Score;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +11,7 @@ import java.util.Random;
 
 public class CustomerManager implements Runnable{
     private Thread thread = null;
-    private ScoreManager scoreManager;
+    private final ScoreManager scoreManager;
     public final List<CustomerThread> customerPool = Collections.synchronizedList(new ArrayList<>());
     private boolean running = false;
     private final Random random = new Random();
