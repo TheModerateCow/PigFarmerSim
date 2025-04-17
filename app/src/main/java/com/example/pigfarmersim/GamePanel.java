@@ -117,12 +117,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     // for max process size
     private List<CustomerGroup> noOfProcesses;
 
+    private static final int MAX_PROCESSES = 3;
+
     // for max process size flashing
     private boolean shouldFlash = false;
     private long flashStartTime = 0;
     private boolean flashOn = false;
     private static final long FLASH_DURATION = 1000; // total duration of flashing (e.g., 1s)
-    private static final long FLASH_INTERVAL = 100; // how often it blinks
+    private static final long FLASH_INTERVAL = 200; // how often it blinks
 
     /**
      * Constructs a new GamePanel with the specified context.
@@ -371,6 +373,17 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             group.drawTimer(c, timerPaint);
         }
 
+        // for max process size flashing
+        if (shouldFlash) {
+            scorePaint.setColor(flashOn ? Color.YELLOW : Color.WHITE);
+
+            if (noOfProcesses.size() >= MAX_PROCESSES) {
+                c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2, MainActivity.GAME_HEIGHT / 2, scorePaint);
+            } else if (queueManager.numberOfFreeTables() <= 0){
+                c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2, MainActivity.GAME_HEIGHT / 2, scorePaint);
+            }
+        }
+
         holder.unlockCanvasAndPost(c);
     }
 
@@ -429,8 +442,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     scorePaint.setColor(Color.WHITE);
                 }
             }
-
-//            canvas.drawText("Max 3 customers at a time!", 100, 100, scoreTextPaint);
         }
 
         customerSpawner.customers.removeAll(customersToRemove);
@@ -495,7 +506,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
 
-            Iterator<CustomerGroup> iterator = customerSpawner.customers.iterator();
+            List<CustomerGroup> copy = List.copyOf(customerSpawner.customers);
+            Iterator<CustomerGroup> iterator = copy.iterator();
             while (iterator.hasNext()) {
                 CustomerGroup customer = iterator.next();
                 PointF custPos = customer.getCurrent();
@@ -526,7 +538,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                                 mp.release();
                             }
                         });
-                        if (noOfProcesses.size() < 3) {
+                        if (queueManager.numberOfFreeTables() > 0 && noOfProcesses.size() < MAX_PROCESSES) {
                             queueManager.giveFreeTables(customer);
                             customer.inQueue = false;
                             noOfProcesses.add(customer);

@@ -95,4 +95,8 @@ public class QueueManager {
             else freeDownstairTables.add(pos);
         }
     }
+
+    public int numberOfFreeTables() {
+        return freeDownstairTables.size() + freeUpstairTables.size();
+    }
 }

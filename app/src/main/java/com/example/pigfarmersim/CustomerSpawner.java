@@ -22,12 +22,12 @@ public class CustomerSpawner {
     }
 
     private long getRandomSpawnDelay() {
-        return 1000 + random.nextInt(4000); // 1000ms to 5000ms (1s to 5s)
+        return 500 + random.nextInt(1000); // 1000ms to 5000ms (1s to 5s)
     }
 
     public void update() {
         long currentTime = SystemClock.elapsedRealtime();
-        if (currentTime - lastSpawnTime >= nextSpawnDelay && customers.size() < 5) {
+        if (currentTime - lastSpawnTime >= nextSpawnDelay && customers.size() < 6) {
             spawnCustomer();
             nextSpawnDelay = getRandomSpawnDelay();
         }

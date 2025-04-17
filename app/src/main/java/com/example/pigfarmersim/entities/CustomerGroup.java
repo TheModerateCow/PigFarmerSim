@@ -27,7 +27,7 @@ public class CustomerGroup {
     public int jobTimerColor = Color.WHITE;
 
     public CustomerGroup() {
-        this.groupSize = random.nextInt(4) + 1; // Random group size from 1 to 4
+        this.groupSize = random.nextInt(4) + 10; // Random group size from 1 to 4
         for (int i = 0; i < this.groupSize; i++) {
             listPoints.add(new PointF());
         }
