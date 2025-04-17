@@ -1,6 +1,14 @@
 package com.example.pigfarmersim.helpers;
 
 public final class GameConstants {
+    public static final int TABLE_SLOTS = 45;
+    public static final int QUEUE_SLOTS = 6;
+
+    public static final class GROUP_CONSTANTS {
+        public static final int MAX_SIZE = 4;
+        public static final int SPAWN_DELAY = 4000;
+    }
+
     public static final class Face_Dir{
         public static final int DOWN = 0;
         public static final int UP = 1;
