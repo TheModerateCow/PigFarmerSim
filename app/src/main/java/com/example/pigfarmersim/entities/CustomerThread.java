@@ -6,12 +6,15 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 
 import com.example.pigfarmersim.helpers.GameConstants;
+import com.example.pigfarmersim.managers.ScoreManager;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class CustomerThread implements Runnable {
+    private Thread thread = null;
+    private ScoreManager scoreManager;
     private static final Random random = new Random();
     public int groupSize = random.nextInt(GameConstants.GROUP_CONSTANTS.MAX_SIZE) + 1; // Random group size from 1 to 4
     private boolean running = false;
@@ -28,7 +31,8 @@ public class CustomerThread implements Runnable {
     public int waitingTimerColor = Color.WHITE; // exposed for drawing
     public int jobTimerColor = Color.WHITE;
 
-    public CustomerThread() {
+    public CustomerThread(ScoreManager scoreManager) {
+        this.scoreManager = scoreManager;
         for (int i = 0; i < this.groupSize; i++) {
             listPoints.add(new PointF());
         }
@@ -63,13 +67,13 @@ public class CustomerThread implements Runnable {
 
     @Override
     public void run() {
-        running = true;
         while (running && (!waitExpire || !jobDone) ) {
             if (inQueue) {
                 waitingTimeLeft -= System.currentTimeMillis() - spawnTime;
                 spawnTime = System.currentTimeMillis();
 
                 if (waitingTimeLeft < 0f) {
+                    scoreManager.failure(groupSize);
                     waitExpire = true;
                     return;
                 }
@@ -83,6 +87,7 @@ public class CustomerThread implements Runnable {
             else {
                 long elapsed_time = System.currentTimeMillis() - spawnTime;
                 if (elapsed_time >= JOB_TIME) {
+                    scoreManager.success(groupSize);
                     jobDone = true;
                     return;
                 }
@@ -95,10 +100,17 @@ public class CustomerThread implements Runnable {
             }
         }
     }
+    public void startThread() {
+        running = true;
+        thread = new Thread(this);
+        thread.start();
+    }
 
-
-
-    public void interrupt() {
+    public void stopThread() {
         running = false;
+        try {
+            if (thread != null) thread.join();
+        } catch (InterruptedException ignore){
+        }
     }
 }

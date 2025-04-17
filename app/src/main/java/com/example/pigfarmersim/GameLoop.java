@@ -52,11 +52,8 @@ public class GameLoop implements Runnable {
         running = false;
         // Wait for the thread to finish
         try {
-            if (gameThread != null) {
-                gameThread.join();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (gameThread != null) gameThread.join();
+        } catch (InterruptedException ignore) {
         }
     }
 }

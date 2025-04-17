@@ -20,6 +20,7 @@ import com.example.pigfarmersim.entities.CustomerThread;
 import com.example.pigfarmersim.environments.MapLoader;
 import com.example.pigfarmersim.managers.CustomerManager;
 import com.example.pigfarmersim.managers.QueueManager;
+import com.example.pigfarmersim.managers.ScoreManager;
 import com.example.pigfarmersim.managers.TableManager;
 import com.example.pigfarmersim.helpers.GameConstants;
 
@@ -42,7 +43,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final MapLoader mapLoader = new MapLoader();
     private final QueueManager queueManager = new QueueManager();
     private final TableManager tableManager = new TableManager();
-    private final CustomerManager customerManager = new CustomerManager();
+    private final ScoreManager scoreManager = new ScoreManager();
+    private final CustomerManager customerManager = new CustomerManager(scoreManager);
     private boolean isPaused = false;
     private final RectF pauseButton;
     private final Paint pauseButtonPaint;
@@ -62,7 +64,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final RectF endScreenBgRect;
     private final RectF menuButtonRect;
     private final RectF endGameButton;
-    private int score = 0; // Or start with your desired initial score
     private final Paint scorePaint;
     private List<CustomerThread> noOfProcesses;
     private static final int MAX_PROCESSES = 3;
@@ -83,7 +84,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         holder = getHolder();
         holder.addCallback(this);
         gameLoop = new GameLoop(this);
-        new Thread(customerManager).start();
+        customerManager.startThread();
 
         // Initialize pause button
         pauseButton = new RectF(MainActivity.GAME_WIDTH - 100, 20, MainActivity.GAME_WIDTH - 20, 100);
@@ -177,6 +178,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         noOfProcesses = new ArrayList<>();
     }
 
+    public CustomerManager getCustomerManager() { return customerManager; }
+
     public GameLoop getGameLoop() {
         return gameLoop;
     }
@@ -195,7 +198,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         // *** Draw the scoreboard in the top-right corner ***
         int margin = 20;  // Padding from the edge
         // Using MainActivity.GAME_WIDTH here or you could use c.getWidth()
-        String scoreText = "Score: " + score;
+        String scoreText = "Score: " + scoreManager.getScore();
         c.drawText(scoreText, MainActivity.GAME_WIDTH / 2f, 60 + margin, scorePaint);
 
         // Draw pause icon (two vertical bars)
@@ -333,7 +336,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             // Check for waiting timer expiration
             if (customer.waitExpire) {
                 // Customer left because they waited too long
-                score -= 10 * customer.groupSize;
                 customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
             }
@@ -341,7 +343,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             // Check for job completion
             if (customer.jobDone) {
                 // Customer served successfully
-                score += 20 * customer.groupSize;
                 customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
                 tableManager.returnFreeTables(customer);

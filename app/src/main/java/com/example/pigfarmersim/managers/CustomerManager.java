@@ -3,6 +3,7 @@ package com.example.pigfarmersim.managers;
 import android.os.SystemClock;
 import com.example.pigfarmersim.entities.CustomerThread;
 import com.example.pigfarmersim.helpers.GameConstants;
+import com.google.android.material.color.utilities.Score;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,13 +11,16 @@ import java.util.List;
 import java.util.Random;
 
 public class CustomerManager implements Runnable{
+    private Thread thread = null;
+    private ScoreManager scoreManager;
     public final List<CustomerThread> customerPool = Collections.synchronizedList(new ArrayList<>());
     private boolean running = false;
     private final Random random = new Random();
     private long lastSpawnTime;
     private long nextSpawnDelay; // milliseconds
 
-    public CustomerManager() {
+    public CustomerManager(ScoreManager scoreManager) {
+        this.scoreManager = scoreManager;
         lastSpawnTime = SystemClock.elapsedRealtime();
         nextSpawnDelay = getRandomSpawnDelay();
     }
@@ -30,9 +34,9 @@ public class CustomerManager implements Runnable{
     }
 
     private void addNewCustomerThread() {
-        CustomerThread customer = new CustomerThread();
+        CustomerThread customer = new CustomerThread(scoreManager);
         customerPool.add(customer);
-        new Thread(customer).start();
+        customer.startThread();
     }
 
     @Override
@@ -50,12 +54,22 @@ public class CustomerManager implements Runnable{
             }
         } finally {
             for (CustomerThread customer: customerPool) {
-                customer.interrupt();
+                customer.stopThread();
             }
         }
     }
 
-    public void interrupt() {
+    public void startThread() {
+        running = true;
+        thread = new Thread(this);
+        thread.start();
+    }
+
+    public void stopThread() {
         running = false;
+        try {
+            if (thread != null) thread.join();
+        } catch (InterruptedException ignore){
+        }
     }
 }

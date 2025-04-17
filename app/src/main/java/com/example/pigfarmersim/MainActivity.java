@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
             if (gamePanel.getGameLoop() != null) {
                 gamePanel.getGameLoop().stopGameLoop();
             }
+            gamePanel.getCustomerManager().stopThread();
         }
 
         Intent intent = new Intent(this, MainPageActivity.class);
