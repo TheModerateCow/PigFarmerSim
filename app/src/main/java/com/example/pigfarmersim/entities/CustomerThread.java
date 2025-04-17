@@ -49,7 +49,7 @@ public class CustomerThread implements Runnable {
 
         paint.setTextSize(40);
 
-        float timeLeftSec = 0;
+        float timeLeftSec;
         if (inQueue) {
             timeLeftSec = Math.max(0, waitingTimeLeft / 1000f);
             paint.setColor(waitingTimerColor);
@@ -57,8 +57,8 @@ public class CustomerThread implements Runnable {
             timeLeftSec = Math.max(0, (JOB_TIME - (System.currentTimeMillis() - spawnTime)) / 1000f);
             paint.setColor(jobTimerColor);
         }
-
         canvas.drawText(String.format("%.1fs", timeLeftSec), pos.x, pos.y + 110, paint);
+
     }
 
     @Override
@@ -95,6 +95,8 @@ public class CustomerThread implements Runnable {
             }
         }
     }
+
+
 
     public void interrupt() {
         running = false;

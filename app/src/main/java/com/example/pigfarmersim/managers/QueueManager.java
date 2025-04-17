@@ -18,7 +18,7 @@ public class QueueManager {
     private final int OUTSIDE_COLS = 2;
     private final int OUTSIDE_GROUPS = GameConstants.QUEUE_SLOTS;
 
-    public QueueManager(TableManager tableManager) {
+    public QueueManager() {
         limits.put("outside", new Bounds(140f, 1024f, 0f, 240f));
         generateQueueLayout();
     }

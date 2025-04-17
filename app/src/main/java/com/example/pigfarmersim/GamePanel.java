@@ -1,8 +1,5 @@
 package com.example.pigfarmersim;
 
-import static android.os.SystemClock.sleep;
-import static java.lang.Math.abs;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -21,6 +18,7 @@ import androidx.annotation.NonNull;
 import com.example.pigfarmersim.entities.Customer;
 import com.example.pigfarmersim.entities.CustomerThread;
 import com.example.pigfarmersim.environments.MapLoader;
+import com.example.pigfarmersim.managers.CustomerManager;
 import com.example.pigfarmersim.managers.QueueManager;
 import com.example.pigfarmersim.managers.TableManager;
 import com.example.pigfarmersim.helpers.GameConstants;
@@ -28,7 +26,6 @@ import com.example.pigfarmersim.helpers.GameConstants;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 
 /**
  * A custom SurfaceView that serves as the game panel.
@@ -37,31 +34,15 @@ import java.util.Random;
  */
 public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final SurfaceHolder holder;
-    private final Random random = new Random();
     private final GameLoop gameLoop;
-    private boolean movePlayer;
-    private PointF lastTouchDiff;
-    private float cameraX;
-    private float cameraTargetX = cameraX;
-    private List<CustomerThread> customers = new ArrayList<>();
-    private int table_idx = 0;
-    private final PointF skeletonPos;
-    private int skeletonDir = GameConstants.Face_Dir.DOWN;
-    private long lastDirChange = System.currentTimeMillis();
     private int customerDir = GameConstants.Face_Dir.DOWN;
+    private long lastDirChange = System.currentTimeMillis();
     private int customerFrame = 0;
-    private long frameTime = System.currentTimeMillis();
-    private long IOframeTime = System.currentTimeMillis();
-    private int playerAniIndexY, playerFaceDir = GameConstants.Face_Dir.RIGHT;
-    private int aniTick;
-    private int aniSpeed = 10;
-    private MapLoader mapLoader;
-    private QueueManager queueManager;
-    private TableManager tableManager;
-
-    private ArrayList<PointF> customer_queue = new ArrayList<>();
-
-    // Pause button and menu elements
+    private long lastFrameChange = System.currentTimeMillis();
+    private final MapLoader mapLoader = new MapLoader();
+    private final QueueManager queueManager = new QueueManager();
+    private final TableManager tableManager = new TableManager();
+    private final CustomerManager customerManager = new CustomerManager();
     private boolean isPaused = false;
     private final RectF pauseButton;
     private final Paint pauseButtonPaint;
@@ -81,36 +62,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final RectF endScreenBgRect;
     private final RectF menuButtonRect;
     private final RectF endGameButton;
-    private final float cameraXMin = 0; // Right-most
-    private final float cameraXMax = MainActivity.GAME_HEIGHT; // Left-most
-
-
-
-
-    // Add these state constants near the top of GamePanel class
-    private static final int numberOfCustomers = 5;
-
-    private static final float initialX = 0;
-
-    private static final float initialY = 0;
-    private static final int STATE_IDLE = 0;
-    private static final int STATE_MOVING_TO_TABLE = 1; // Example state
-    private static final int STATE_ORDERING = 2;        // Example state
-    private static final int STATE_MOVING_TO_WAIT_AREA = 3;
-    private static final int STATE_WAITING_IO = 4;
-    private static final int STATE_MOVING_FROM_WAIT_AREA = 5;
-    private static final int STATE_LEAVING = 6;         // Example state
     private int score = 0; // Or start with your desired initial score
     private final Paint scorePaint;
-
-    // for customer spawner
-    private CustomerSpawner customerSpawner;
-
-    // for max process size
     private List<CustomerThread> noOfProcesses;
-
     private static final int MAX_PROCESSES = 3;
-
     // for max process size flashing
     private boolean shouldFlash = false;
     private long flashStartTime = 0;
@@ -128,11 +83,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         holder = getHolder();
         holder.addCallback(this);
         gameLoop = new GameLoop(this);
-        mapLoader = new MapLoader();
-        tableManager = new TableManager();
-        queueManager = new QueueManager(tableManager);
-
-        skeletonPos = new PointF((random.nextInt(MainActivity.GAME_WIDTH)), (random.nextInt(MainActivity.GAME_HEIGHT)));
+        new Thread(customerManager).start();
 
         // Initialize pause button
         pauseButton = new RectF(MainActivity.GAME_WIDTH - 100, 20, MainActivity.GAME_WIDTH - 20, 100);
@@ -167,10 +118,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         int centerX = MainActivity.GAME_WIDTH / 2;
         int centerY = MainActivity.GAME_HEIGHT / 2;
 
-        resumeButton = new RectF(centerX - buttonWidth / 2, centerY - buttonHeight - 20,
-                centerX + buttonWidth / 2, centerY - 20);
-        quitButton = new RectF(centerX - buttonWidth / 2, centerY + 20,
-                centerX + buttonWidth / 2, centerY + buttonHeight + 20);
+        resumeButton = new RectF(centerX - buttonWidth / 2f, centerY - buttonHeight - 20,
+                centerX + buttonWidth / 2f, centerY - 20);
+        quitButton = new RectF(centerX - buttonWidth / 2f, centerY + 20,
+                centerX + buttonWidth / 2f, centerY + buttonHeight + 20);
 
         // Overlay paint (semi-transparent black)
         endOverlayPaint = new Paint();
@@ -212,12 +163,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 centerX + 200, centerY + 250
         );
 
-        endGameButton = new RectF(centerX - buttonWidth / 2, centerY + buttonHeight + 60,
-                centerX + buttonWidth / 2, centerY + 2 * buttonHeight + 60);
-
-        // for customer spawner
-        customerSpawner = new CustomerSpawner();
-        new Thread(customerSpawner).start();
+        endGameButton = new RectF(centerX - buttonWidth / 2f, centerY + buttonHeight + 60,
+                centerX + buttonWidth / 2f, centerY + 2 * buttonHeight + 60);
 
         //Score pain
         scorePaint = new Paint();
@@ -235,10 +182,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void render() {
-
-        // Clamp AFTER easing to avoid sharp stops mid-drag
-        cameraX = Math.max(cameraXMin, Math.min(cameraXMax, cameraTargetX));
-
         Canvas c = holder.lockCanvas();
         c.drawColor(Color.BLACK);
 
@@ -253,7 +196,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         int margin = 20;  // Padding from the edge
         // Using MainActivity.GAME_WIDTH here or you could use c.getWidth()
         String scoreText = "Score: " + score;
-        c.drawText(scoreText, MainActivity.GAME_WIDTH / 2, 60 + margin, scorePaint);
+        c.drawText(scoreText, MainActivity.GAME_WIDTH / 2f, 60 + margin, scorePaint);
 
         // Draw pause icon (two vertical bars)
         float barWidth = 12;
@@ -282,7 +225,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             titlePaint.setColor(Color.WHITE);
             titlePaint.setTextSize(70);
             titlePaint.setTextAlign(Paint.Align.CENTER);
-            c.drawText("PAUSED", MainActivity.GAME_WIDTH / 2, menuTop + 100, titlePaint);
+            c.drawText("PAUSED", MainActivity.GAME_WIDTH / 2f, menuTop + 100, titlePaint);
 
             // Draw buttons
             c.drawRoundRect(resumeButton, 15, 15, buttonPaint);
@@ -329,7 +272,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        List<CustomerThread> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
+        List<CustomerThread> customersCopy = new ArrayList<>(customerManager.getCustomerGroups());
 
         for (CustomerThread group : customersCopy) {
             if (!group.inQueue) {
@@ -364,24 +307,29 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             scorePaint.setColor(flashOn ? Color.YELLOW : Color.WHITE);
 
             if (noOfProcesses.size() >= MAX_PROCESSES) {
-                c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2, MainActivity.GAME_HEIGHT / 2, scorePaint);
-            } else if (queueManager.queuePool.size() <= 0){
-                c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2, MainActivity.GAME_HEIGHT / 2, scorePaint);
+                c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
+            } else if (queueManager.queuePool.isEmpty()){
+                c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
             }
         }
 
         holder.unlockCanvasAndPost(c);
     }
 
-    public void update(double delta) {
-        if (System.currentTimeMillis() - frameTime >= 1000) {
+    public void update() {
+        if (System.currentTimeMillis() - lastDirChange >= 3000) {
+            lastDirChange = System.currentTimeMillis();
+            customerDir = (customerDir + 1) % 4;
+        }
+
+        if (System.currentTimeMillis() - lastFrameChange >= 1000) {
             customerFrame = (customerFrame + 1) % 4;
-            frameTime = System.currentTimeMillis();
+            lastFrameChange = System.currentTimeMillis();
         }
 
         List<CustomerThread> customersToRemove = new ArrayList<>();
         // for customer timer
-        for (CustomerThread customer : customerSpawner.getCustomerGroups()) {
+        for (CustomerThread customer : customerManager.getCustomerGroups()) {
             // Check for waiting timer expiration
             if (customer.waitExpire) {
                 // Customer left because they waited too long
@@ -401,19 +349,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        customerSpawner.customerPool.removeAll(customersToRemove);
+        customerManager.customerPool.removeAll(customersToRemove);
 
         // for max process size flashing
         if (shouldFlash) {
             MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.error);
             mp.start();
             // Optionally, release the MediaPlayer when done to free resources:
-            mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    mp.release();
-                }
-            });
+            mp.setOnCompletionListener(MediaPlayer::release);
             long currentTime = System.currentTimeMillis();
             long elapsed = currentTime - flashStartTime;
 
@@ -427,8 +370,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     scorePaint.setColor(Color.WHITE);
                 }
             }
-
-//            canvas.drawText("Max 3 customerPool at a time!", 100, 100, scoreTextPaint);
         }
     }
 
@@ -491,23 +432,23 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
 
-            List<CustomerThread> customerCopy = List.copyOf(customerSpawner.customerPool);
+            List<CustomerThread> customerCopy = List.copyOf(customerManager.customerPool);
             Iterator<CustomerThread> iterator = customerCopy.iterator();
             while (iterator.hasNext()) {
                 CustomerThread customer = iterator.next();
-                PointF custPos = customer.getCurrent();
+                PointF customerPos = customer.getCurrent();
 
-                while (iterator.hasNext() && custPos == null) {
+                while (iterator.hasNext() && customerPos == null) {
                     customer = iterator.next();
-                    custPos = customer.getCurrent();
+                    customerPos = customer.getCurrent();
                 }
 
-                if (custPos == null) {
+                if (customerPos == null) {
                     return true;
                 }
                 // Define the bounding box dimensions for the customer
-                float left = custPos.x;
-                float top = custPos.y;
+                float left = customerPos.x;
+                float top = customerPos.y;
                 float right = left + 100;   // customerWidth could be a constant or property.
                 float bottom = top + 150;   // Same for customerHeight.
 
@@ -517,12 +458,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.mysound);
                         mp.start();
                         // Optionally, release the MediaPlayer when done to free resources:
-                        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mp) {
-                                mp.release();
-                            }
-                        });
+                        mp.setOnCompletionListener(MediaPlayer::release);
                         if (tableManager.tablePool.size() > customer.groupSize && noOfProcesses.size() < MAX_PROCESSES) {
                             tableManager.giveFreeTables(customer);
                             customer.inQueue = false;
@@ -541,11 +477,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
         return true;
-    }
-
-    public void resetAnimation() {
-        aniTick = 0;         // Reset the counter that schedules frame changes
-        playerAniIndexY = 0; // Reset the animation frame index to the first frame
     }
 
     /**
@@ -593,24 +524,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         // Clean up resources and stop the game loop safely
     }
 
-    public synchronized void addScore(float timeServed) {
-        this.score += (int) (timeServed / 20 * 100);
-    }
-
-    public void setPlayerMoveFalse() {
-        movePlayer = false;
-        resetAnimation();
-    }
-
-    public void setPlayerMoveTrue(PointF lastTouchDiff) {
-        movePlayer = true;
-        this.lastTouchDiff = lastTouchDiff;
-    }
-
-    public boolean isPaused() {
-        return isPaused;
-    }
-
     public void setPaused(boolean paused) {
         isPaused = paused;
     }
@@ -634,12 +547,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.gamend);
         mp.start();
         // Optionally, release the MediaPlayer when done to free resources:
-        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                mp.release();
-            }
-        });
+        mp.setOnCompletionListener(MediaPlayer::release);
         showEndScreen();
         // You might want to save the score here
     }

@@ -1,6 +1,7 @@
 package com.example.pigfarmersim;
 
 import com.example.pigfarmersim.entities.CustomerThread;
+import com.example.pigfarmersim.managers.CustomerManager;
 
 import java.util.List;
 
@@ -8,8 +9,7 @@ public class GameLoop implements Runnable {
     private Thread gameThread;
     private GamePanel gamePanel;
     public volatile boolean running = false; // Added running flag
-
-    private CustomerSpawner customerSpawner;
+    private CustomerManager customerManager;
 
     public List<CustomerThread> customers;
 
@@ -21,22 +21,12 @@ public class GameLoop implements Runnable {
 
     @Override
     public void run() {
-//        customerPool = customerSpawner.getCustomerGroups();
         long lastFPScheck = System.currentTimeMillis();
         int fps = 0;
 
-        long lastDelta = System.nanoTime();
-        long nanoSec = 1_000_000_000;
-
         while (running) {
-
-            long nowDelta = System.nanoTime();
-            double timeSinceLastDelta = nowDelta - lastDelta;
-            double delta = timeSinceLastDelta / nanoSec;
-
-            gamePanel.update(delta);
+            gamePanel.update();
             gamePanel.render();
-            lastDelta = nowDelta;
 
             fps++;
 
@@ -59,7 +49,7 @@ public class GameLoop implements Runnable {
     }
 
     public void stopGameLoop() {
-        running = false;  // Assuming you have a 'running' boolean flag
+        running = false;
         // Wait for the thread to finish
         try {
             if (gameThread != null) {

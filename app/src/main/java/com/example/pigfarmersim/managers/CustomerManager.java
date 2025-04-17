@@ -1,4 +1,4 @@
-package com.example.pigfarmersim;
+package com.example.pigfarmersim.managers;
 
 import android.os.SystemClock;
 import com.example.pigfarmersim.entities.CustomerThread;
@@ -9,14 +9,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class CustomerSpawner implements Runnable{
+public class CustomerManager implements Runnable{
     public final List<CustomerThread> customerPool = Collections.synchronizedList(new ArrayList<>());
     private boolean running = false;
     private final Random random = new Random();
     private long lastSpawnTime;
     private long nextSpawnDelay; // milliseconds
 
-    public CustomerSpawner() {
+    public CustomerManager() {
         lastSpawnTime = SystemClock.elapsedRealtime();
         nextSpawnDelay = getRandomSpawnDelay();
     }
