@@ -65,13 +65,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private int score = 0; // Or start with your desired initial score
     private final Paint scorePaint;
     private List<CustomerThread> noOfProcesses;
-    private static final int MAX_PROCESSES = 3;
+
     // for max process size flashing
     private boolean shouldFlash = false;
     private long flashStartTime = 0;
     private boolean flashOn = false;
-    private static final long FLASH_DURATION = 1000; // total duration of flashing (e.g., 1s)
-    private static final long FLASH_INTERVAL = 200; // how often it blinks
+
 
     /**
      * Constructs a new GamePanel with the specified context.
@@ -306,7 +305,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (shouldFlash) {
             scorePaint.setColor(flashOn ? Color.YELLOW : Color.WHITE);
 
-            if (noOfProcesses.size() >= MAX_PROCESSES) {
+            if (noOfProcesses.size() >= GameConstants.GAME_PANEL_CONSTANTS.MAX_PROCESSES) {
                 c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
             } else if (queueManager.queuePool.isEmpty()){
                 c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
@@ -360,11 +359,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             long currentTime = System.currentTimeMillis();
             long elapsed = currentTime - flashStartTime;
 
-            if (elapsed >= FLASH_DURATION) {
+            if (elapsed >= GameConstants.SCORE_FLASHING.FLASH_DURATION) {
                 shouldFlash = false; // Stop flashing
                 scorePaint.setColor(Color.BLACK); // Reset to default
             } else {
-                if ((elapsed / FLASH_INTERVAL) % 2 == 0) {
+                if ((elapsed / GameConstants.SCORE_FLASHING.FLASH_INTERVAL) % 2 == 0) {
                     scorePaint.setColor(Color.YELLOW);
                 } else {
                     scorePaint.setColor(Color.WHITE);
@@ -459,7 +458,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                         mp.start();
                         // Optionally, release the MediaPlayer when done to free resources:
                         mp.setOnCompletionListener(MediaPlayer::release);
-                        if (tableManager.tablePool.size() > customer.groupSize && noOfProcesses.size() < MAX_PROCESSES) {
+                        if (tableManager.tablePool.size() > customer.groupSize && noOfProcesses.size() < GameConstants.GAME_PANEL_CONSTANTS.MAX_PROCESSES) {
                             tableManager.giveFreeTables(customer);
                             customer.inQueue = false;
                             noOfProcesses.add(customer);

@@ -13,7 +13,7 @@ import java.util.Random;
 
 public class CustomerThread implements Runnable {
     private static final Random random = new Random();
-    public int groupSize = random.nextInt(GameConstants.GROUP_CONSTANTS.MAX_SIZE) + 1; // Random group size from 1 to 4
+    public int groupSize = random.nextInt(GameConstants.GROUP_CONSTANTS.MAX_SIZE) + 1; // Random group size from 1 to 11
     private boolean running = false;
     public boolean inQueue = true;
     public boolean jobDone = false;
@@ -21,9 +21,9 @@ public class CustomerThread implements Runnable {
     public PointF queuePoint = null;
     public List<PointF> listPoints = new ArrayList<>();
     // for timer
-    private static final long WAITING_TIME = 20000; // 20 seconds
-    private long waitingTimeLeft = WAITING_TIME;
-    private static final long JOB_TIME = 5000;
+    private long waitingTimeLeft;
+    private final long waitingTime = GameConstants.CUSTOMER_THREAD_CONSTANTS.WAITING_TIME + random.nextInt(10000);
+//            (long) ((GameConstants.CUSTOMER_THREAD_CONSTANTS.WAITING_TIME) * random.nextFloat());
     private long spawnTime;
     public int waitingTimerColor = Color.WHITE; // exposed for drawing
     public int jobTimerColor = Color.WHITE;
@@ -33,6 +33,7 @@ public class CustomerThread implements Runnable {
             listPoints.add(new PointF());
         }
         this.spawnTime = System.currentTimeMillis();
+        this.waitingTimeLeft = waitingTime;
     }
 
     public PointF getCurrent() {
@@ -54,7 +55,7 @@ public class CustomerThread implements Runnable {
             timeLeftSec = Math.max(0, waitingTimeLeft / 1000f);
             paint.setColor(waitingTimerColor);
         } else {
-            timeLeftSec = Math.max(0, (JOB_TIME - (System.currentTimeMillis() - spawnTime)) / 1000f);
+            timeLeftSec = Math.max(0, (GameConstants.CUSTOMER_THREAD_CONSTANTS.JOB_TIME - (System.currentTimeMillis() - spawnTime)) / 1000f);
             paint.setColor(jobTimerColor);
         }
         canvas.drawText(String.format("%.1fs", timeLeftSec), pos.x, pos.y + 110, paint);
@@ -74,7 +75,7 @@ public class CustomerThread implements Runnable {
                     return;
                 }
 
-                float progress = (float) (WAITING_TIME - waitingTimeLeft) / WAITING_TIME;
+                float progress = (float) (waitingTime - waitingTimeLeft) / waitingTime;
                 int red = 255;
                 int greenBlue = (int) (255 * (1 - progress)); // fades from white -> red
 
@@ -82,12 +83,12 @@ public class CustomerThread implements Runnable {
             }
             else {
                 long elapsed_time = System.currentTimeMillis() - spawnTime;
-                if (elapsed_time >= JOB_TIME) {
+                if (elapsed_time >= GameConstants.CUSTOMER_THREAD_CONSTANTS.JOB_TIME) {
                     jobDone = true;
                     return;
                 }
 
-                float progress = (float) elapsed_time / JOB_TIME;
+                float progress = (float) elapsed_time / GameConstants.CUSTOMER_THREAD_CONSTANTS.JOB_TIME;
                 int green = 255;
                 int redBlue = (int) (255 * (1 - progress)); // fades from white -> green
 
