@@ -32,16 +32,7 @@ public class CustomerSpawner implements Runnable{
     private void addNewCustomerThread() {
         CustomerThread customer = new CustomerThread();
         customerPool.add(customer);
-
-        Runnable wrapper = () -> {
-            try {
-                customer.run();
-            } finally {
-                customerPool.remove(customer);
-            }
-        };
-
-        new Thread(wrapper).start();
+        new Thread(customer).start();
     }
 
     @Override

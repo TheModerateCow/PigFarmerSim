@@ -365,7 +365,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
             if (noOfProcesses.size() >= MAX_PROCESSES) {
                 c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2, MainActivity.GAME_HEIGHT / 2, scorePaint);
-            } else if (queueManager.numberOfFreeTables() <= 0){
+            } else if (queueManager.queuePool.size() <= 0){
                 c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2, MainActivity.GAME_HEIGHT / 2, scorePaint);
             }
         }
@@ -379,12 +379,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             frameTime = System.currentTimeMillis();
         }
 
+        List<CustomerThread> customersToRemove = new ArrayList<>();
         // for customer timer
         for (CustomerThread customer : customerSpawner.getCustomerGroups()) {
             // Check for waiting timer expiration
             if (customer.waitExpire) {
                 // Customer left because they waited too long
                 score -= 10 * customer.groupSize;
+                customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
             }
 
@@ -392,11 +394,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             if (customer.jobDone) {
                 // Customer served successfully
                 score += 20 * customer.groupSize;
+                customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
                 tableManager.returnFreeTables(customer);
                 noOfProcesses.remove(customer);
             }
         }
+
+        customerSpawner.customerPool.removeAll(customersToRemove);
 
         // for max process size flashing
         if (shouldFlash) {
@@ -486,8 +491,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
 
-            List<CustomerThread> customerCopy = List.copyOf(customerSpawner.customers);
-            Iterator<CustomerThread> iterator = copy.iterator();
+            List<CustomerThread> customerCopy = List.copyOf(customerSpawner.customerPool);
+            Iterator<CustomerThread> iterator = customerCopy.iterator();
             while (iterator.hasNext()) {
                 CustomerThread customer = iterator.next();
                 PointF custPos = customer.getCurrent();
@@ -518,7 +523,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                                 mp.release();
                             }
                         });
-                        if (queueManager.numberOfFreeTables() > 0 && noOfProcesses.size() < MAX_PROCESSES) {
+                        if (tableManager.tablePool.size() > customer.groupSize && noOfProcesses.size() < MAX_PROCESSES) {
                             tableManager.giveFreeTables(customer);
                             customer.inQueue = false;
                             noOfProcesses.add(customer);

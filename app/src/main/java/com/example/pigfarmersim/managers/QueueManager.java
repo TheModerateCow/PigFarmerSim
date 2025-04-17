@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class QueueManager {
-    private final List<PointF> queuePool = new ArrayList<>();
+    public final List<PointF> queuePool = new ArrayList<>();
     private final Map<String, Bounds> limits = new HashMap<>();
     private final int OUTSIDE_COLS = 2;
     private final int OUTSIDE_GROUPS = GameConstants.QUEUE_SLOTS;
@@ -51,6 +51,6 @@ public class QueueManager {
     }
 
     public synchronized void returnFreeQueue(PointF point) {
-        queuePool.add(point);
+        if (point != null) queuePool.add(point);
     }
 }

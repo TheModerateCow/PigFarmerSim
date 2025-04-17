@@ -17,7 +17,7 @@ import com.example.pigfarmersim.helpers.GameConstants;
 
 
 public class TableManager {
-    private final List<PointF> tablePool = new ArrayList<>();
+    public final List<PointF> tablePool = new ArrayList<>();
     private final Map<String, Bounds> limits = new HashMap<>();
     private final int DOWNSTAIRS_ROWS = 3;
     private final int UPSTAIRS_ROWS = 2;
