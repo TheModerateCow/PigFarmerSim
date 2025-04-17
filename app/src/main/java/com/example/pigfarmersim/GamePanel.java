@@ -19,12 +19,11 @@ import android.view.SurfaceView;
 import androidx.annotation.NonNull;
 
 import com.example.pigfarmersim.entities.Customer;
-import com.example.pigfarmersim.entities.CustomerGroup;
-import com.example.pigfarmersim.environments.MapManager;
-import com.example.pigfarmersim.environments.QueueManager;
-import com.example.pigfarmersim.environments.TableManager;
+import com.example.pigfarmersim.entities.CustomerThread;
+import com.example.pigfarmersim.environments.MapLoader;
+import com.example.pigfarmersim.managers.QueueManager;
+import com.example.pigfarmersim.managers.TableManager;
 import com.example.pigfarmersim.helpers.GameConstants;
-import com.example.pigfarmersim.inputs.TouchEvents;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -40,18 +39,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final SurfaceHolder holder;
     private final Random random = new Random();
     private final GameLoop gameLoop;
-    private final TouchEvents touchEvents;
     private boolean movePlayer;
     private PointF lastTouchDiff;
-    private float playerX = (float) MainActivity.GAME_WIDTH / 2, playerY = (float) MainActivity.GAME_HEIGHT / 2;
-    private float cameraX, cameraY;
+    private float cameraX;
     private float cameraTargetX = cameraX;
-    private float lastTouchX;
-    private final float minDragThreshold = 20f;      // Ignore tiny finger twitches
-    private ArrayList<PointF> skeletons = new ArrayList<>();
-    private List<PointF> table_pos = new ArrayList<>();
-    private List<PointF> cust_pos = new ArrayList<>();
-    private List<CustomerGroup> customers = new ArrayList<>();
+    private List<CustomerThread> customers = new ArrayList<>();
     private int table_idx = 0;
     private final PointF skeletonPos;
     private int skeletonDir = GameConstants.Face_Dir.DOWN;
@@ -63,7 +55,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private int playerAniIndexY, playerFaceDir = GameConstants.Face_Dir.RIGHT;
     private int aniTick;
     private int aniSpeed = 10;
-    private MapManager mapManager;
+    private MapLoader mapLoader;
     private QueueManager queueManager;
     private TableManager tableManager;
 
@@ -115,7 +107,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private CustomerSpawner customerSpawner;
 
     // for max process size
-    private List<CustomerGroup> noOfProcesses;
+    private List<CustomerThread> noOfProcesses;
 
     private static final int MAX_PROCESSES = 3;
 
@@ -135,9 +127,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         super(context);
         holder = getHolder();
         holder.addCallback(this);
-        touchEvents = new TouchEvents(this);
         gameLoop = new GameLoop(this);
-        mapManager = new MapManager();
+        mapLoader = new MapLoader();
         tableManager = new TableManager();
         queueManager = new QueueManager(tableManager);
 
@@ -226,6 +217,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         // for customer spawner
         customerSpawner = new CustomerSpawner();
+        new Thread(customerSpawner).start();
 
         //Score pain
         scorePaint = new Paint();
@@ -250,13 +242,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         Canvas c = holder.lockCanvas();
         c.drawColor(Color.BLACK);
 
-        touchEvents.draw(c);
-
-        mapManager.draw(c);
+        mapLoader.draw(c);
 
         tableManager.drawAll(c);
-
-        table_pos = tableManager.getDownstairTables();
 
         // Draw pause button
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
@@ -341,9 +329,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
-        List<CustomerGroup> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
+        List<CustomerThread> customersCopy = new ArrayList<>(customerSpawner.getCustomerGroups());
 
-        for (CustomerGroup group : customersCopy) {
+        for (CustomerThread group : customersCopy) {
             if (!group.inQueue) {
                 for (PointF pos : group.listPoints) {
                     c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
@@ -363,13 +351,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             // draw group size above
             c.drawText("x" + group.groupSize, pos.x + 32, pos.y - 10, groupTextPaint);
         }
-        // for customer spawner
-        customerSpawner.update();
 
         // for customer timer
         Paint timerPaint = new Paint();
 
-        for (CustomerGroup group : customersCopy) {
+        for (CustomerThread group : customersCopy) {
             group.drawTimer(c, timerPaint);
         }
 
@@ -393,17 +379,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             frameTime = System.currentTimeMillis();
         }
 
-        List<CustomerGroup> customersToRemove = new ArrayList<>();
-
         // for customer timer
-        for (CustomerGroup customer : customerSpawner.getCustomerGroups()) {
-            customer.updateTimer();
-
+        for (CustomerThread customer : customerSpawner.getCustomerGroups()) {
             // Check for waiting timer expiration
             if (customer.waitExpire) {
                 // Customer left because they waited too long
                 score -= 10 * customer.groupSize;
-                customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
             }
 
@@ -411,9 +392,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             if (customer.jobDone) {
                 // Customer served successfully
                 score += 20 * customer.groupSize;
-                customersToRemove.add(customer);
                 queueManager.returnFreeQueue(customer.queuePoint);
-                queueManager.returnFreeTables(customer);
+                tableManager.returnFreeTables(customer);
                 noOfProcesses.remove(customer);
             }
         }
@@ -442,9 +422,9 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                     scorePaint.setColor(Color.WHITE);
                 }
             }
-        }
 
-        customerSpawner.customers.removeAll(customersToRemove);
+//            canvas.drawText("Max 3 customerPool at a time!", 100, 100, scoreTextPaint);
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -506,10 +486,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 return true;
             }
 
-            List<CustomerGroup> copy = List.copyOf(customerSpawner.customers);
-            Iterator<CustomerGroup> iterator = copy.iterator();
+            List<CustomerThread> customerCopy = List.copyOf(customerSpawner.customers);
+            Iterator<CustomerThread> iterator = copy.iterator();
             while (iterator.hasNext()) {
-                CustomerGroup customer = iterator.next();
+                CustomerThread customer = iterator.next();
                 PointF custPos = customer.getCurrent();
 
                 while (iterator.hasNext() && custPos == null) {
@@ -539,7 +519,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                             }
                         });
                         if (queueManager.numberOfFreeTables() > 0 && noOfProcesses.size() < MAX_PROCESSES) {
-                            queueManager.giveFreeTables(customer);
+                            tableManager.giveFreeTables(customer);
                             customer.inQueue = false;
                             noOfProcesses.add(customer);
                         } else {
@@ -548,7 +528,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                             flashOn = true; // optional: start with yellow
                         }
                     } else {
-                        queueManager.returnFreeTables(customer);
+                        tableManager.returnFreeTables(customer);
                         customer.inQueue = true;
                         noOfProcesses.remove(customer);
                     }
@@ -581,9 +561,6 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         groupTextPaint.setColor(Color.WHITE);
         groupTextPaint.setTextSize(40);
         groupTextPaint.setTextAlign(Paint.Align.CENTER);
-
-        // for customer spawner
-        customerSpawner.update();
     }
 
     /**
