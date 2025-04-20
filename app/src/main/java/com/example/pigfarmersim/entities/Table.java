@@ -5,16 +5,15 @@ import android.graphics.BitmapFactory;
 
 import com.example.pigfarmersim.MainActivity;
 import com.example.pigfarmersim.R;
-import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.helpers.interfaces.BitmapMethods;
 
 public enum Table implements BitmapMethods {
 
     TABLE(R.drawable.table_spritesheet);
 
-    private Bitmap sprite;
-    public int spriteWidth;
-    public int spriteHeight;
+    private final Bitmap sprite;
+    public final int spriteWidth;
+    public final int spriteHeight;
 
     Table(int resID) {
         BitmapFactory.Options options = new BitmapFactory.Options();
