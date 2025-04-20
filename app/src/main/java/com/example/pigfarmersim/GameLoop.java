@@ -22,9 +22,9 @@ public class GameLoop implements Runnable {
         long fpsLimit = 1000/ GameConstants.FPS_LIMIT;
 
         while (running) {
-            while(System.currentTimeMillis() - lastFrame < fpsLimit) {
+            if(System.currentTimeMillis() - lastFrame < fpsLimit) {
                 try{
-                    Thread.sleep(10);
+                    Thread.sleep(fpsLimit - (System.currentTimeMillis() - lastFrame));
                 } catch (InterruptedException ignore) {
                 }
             }
