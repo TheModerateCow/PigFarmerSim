@@ -30,12 +30,16 @@ public class TableManager {
         final int UPSTAIRS_ROWS = 2;
         final int TOTAL_TABLES = GameConstants.TABLE_SLOTS;
         int cols = (int) Math.ceil((double) TOTAL_TABLES / (DOWNSTAIRS_ROWS + UPSTAIRS_ROWS));
-        float startX = limits.get("downstairs").left * Floor.OUTSIDE.sx;
-        float endX = limits.get("downstairs").right * Floor.OUTSIDE.sx;
+
+        Bounds downstairs = limits.get("downstairs");
+        if (downstairs == null) throw new RuntimeException("Invalid bounds for downstairs tables");
+
+        float startX = downstairs.left * Floor.OUTSIDE.sx;
+        float endX = downstairs.right * Floor.OUTSIDE.sx;
         float spacingX = (endX - startX - cols * 8 * Table.TABLE.spriteWidth) / (cols + 2);
 
-        float startY = limits.get("downstairs").top * Floor.OUTSIDE.sy;
-        float endY = limits.get("downstairs").bottom * Floor.OUTSIDE.sy;
+        float startY = downstairs.top * Floor.OUTSIDE.sy;
+        float endY = downstairs.bottom * Floor.OUTSIDE.sy;
         float spacingY = (endY - startY - DOWNSTAIRS_ROWS * 8 * Table.TABLE.spriteHeight) / (DOWNSTAIRS_ROWS + 2);
 
         float y = startY + spacingY;
@@ -43,14 +47,16 @@ public class TableManager {
             float x = startX + spacingX;
             for (int col = 0; col < cols; col++) {
                 tablePool.add(new PointF(x, y)); // ← save in world coordinates
-                if (tablePool.size() == TOTAL_TABLES) return;
                 x += 8 * Table.TABLE.spriteWidth + spacingX;
             }
             y += 8 * Table.TABLE.spriteHeight + spacingY;
         }
 
-        startY = limits.get("upstairs").top * Floor.OUTSIDE.sy;
-        endY = limits.get("upstairs").bottom * Floor.OUTSIDE.sy;
+        Bounds upstairs = limits.get("upstairs");
+        if (upstairs == null) throw new RuntimeException("Invalid bounds for upstairs tables");
+
+        startY = upstairs.top * Floor.OUTSIDE.sy;
+        endY = upstairs.bottom * Floor.OUTSIDE.sy;
         spacingY = (endY - startY - UPSTAIRS_ROWS * 8 * Table.TABLE.spriteHeight) / (UPSTAIRS_ROWS + 2);
 
         y = startY + spacingY;
@@ -58,7 +64,7 @@ public class TableManager {
             float x = startX + spacingX;
             for (int col = 0; col < cols; col++) {
                 tablePool.add(new PointF(x, y)); // ← save in world coordinates
-                if (tablePool.size() == TOTAL_TABLES) return;
+                if (tablePool.size() == TOTAL_TABLES) return; // Needed: may reach total capacity here too
                 x += 8 * Table.TABLE.spriteWidth + spacingX;
             }
             y += 8 * Table.TABLE.spriteHeight + spacingY;

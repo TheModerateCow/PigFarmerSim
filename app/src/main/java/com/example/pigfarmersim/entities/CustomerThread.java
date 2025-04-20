@@ -11,6 +11,7 @@ import com.example.pigfarmersim.managers.ScoreManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Locale;
 
 public class CustomerThread implements Runnable {
     private Thread thread = null;
@@ -62,8 +63,7 @@ public class CustomerThread implements Runnable {
             timeLeftSec = Math.max(0, (GameConstants.CUSTOMER_THREAD_CONSTANTS.JOB_TIME - (System.currentTimeMillis() - spawnTime)) / 1000f);
             paint.setColor(jobTimerColor);
         }
-        canvas.drawText(String.format("%.1fs", timeLeftSec), pos.x, pos.y + 110, paint);
-
+        canvas.drawText(String.format(Locale.US, "%.1fs", timeLeftSec), pos.x, pos.y + 110, paint);
     }
 
     @Override

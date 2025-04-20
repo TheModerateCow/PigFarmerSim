@@ -1,10 +1,7 @@
 package com.example.pigfarmersim;
 
-import com.example.pigfarmersim.entities.CustomerThread;
 import com.example.pigfarmersim.helpers.GameConstants;
-import com.example.pigfarmersim.managers.CustomerManager;
 
-import java.util.List;
 
 public class GameLoop implements Runnable {
     private Thread gameThread;

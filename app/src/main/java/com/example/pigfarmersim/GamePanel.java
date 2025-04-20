@@ -546,13 +546,4 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             ((MainActivity) context).finishGame();
         }
     }
-
-    public void gameOver() {
-        MediaPlayer mp = MediaPlayer.create(getContext(), R.raw.gamend);
-        mp.start();
-        // Optionally, release the MediaPlayer when done to free resources:
-        mp.setOnCompletionListener(MediaPlayer::release);
-        showEndScreen();
-        // You might want to save the score here
-    }
 }

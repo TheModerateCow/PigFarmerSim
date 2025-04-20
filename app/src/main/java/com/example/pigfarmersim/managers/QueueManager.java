@@ -16,8 +16,6 @@ public class QueueManager {
     public final List<PointF> queuePool = new ArrayList<>();
     public final Object mutex = new Object();
     private final Map<String, Bounds> limits = new HashMap<>();
-    private final int OUTSIDE_COLS = 2;
-    private final int OUTSIDE_GROUPS = GameConstants.QUEUE_SLOTS;
 
     public QueueManager() {
         limits.put("outside", new Bounds(140f, 1024f, 0f, 240f));
@@ -25,10 +23,16 @@ public class QueueManager {
     }
 
     public void generateQueueLayout() {
-        float startX = limits.get("outside").left * Floor.OUTSIDE.sx;
-        float endX = limits.get("outside").right * Floor.OUTSIDE.sx;
-        float startY = limits.get("outside").top * Floor.OUTSIDE.sy;
-        float endY = limits.get("outside").bottom * Floor.OUTSIDE.sy;
+        final int OUTSIDE_COLS = 2;
+        final int OUTSIDE_GROUPS = GameConstants.QUEUE_SLOTS;
+
+        Bounds outside = limits.get("outside");
+        if (outside == null) throw new RuntimeException("Invalid bounds for queue positions");
+
+        float startX = outside.left * Floor.OUTSIDE.sx;
+        float endX = outside.right * Floor.OUTSIDE.sx;
+        float startY = outside.top * Floor.OUTSIDE.sy;
+        float endY = outside.bottom * Floor.OUTSIDE.sy;
         float spacingX = (endX - startX - OUTSIDE_COLS * 4 * GameConstants.Sprite.DEFAULT_SIZE) / (OUTSIDE_COLS + 2);
         int rows = (int) Math.ceil((double) OUTSIDE_GROUPS / OUTSIDE_COLS);
         float spacingY = (endY - startY - rows * 4 * GameConstants.Sprite.DEFAULT_SIZE) / (rows + 2);
@@ -38,6 +42,7 @@ public class QueueManager {
             float x = startX + spacingX;
             for (int col = 0; col < OUTSIDE_COLS; col++) {
                 queuePool.add(new PointF(x, y)); // ← save in world coordinates
+                if (queuePool.size() == OUTSIDE_GROUPS) return;
                 x += 4 * GameConstants.Sprite.DEFAULT_SIZE + spacingX;
             }
             y += 4 * GameConstants.Sprite.DEFAULT_SIZE + spacingY;
