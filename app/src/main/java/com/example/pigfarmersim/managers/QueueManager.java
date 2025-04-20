@@ -14,6 +14,7 @@ import java.util.Map;
 
 public class QueueManager {
     public final List<PointF> queuePool = new ArrayList<>();
+    public final Object mutex = new Object();
     private final Map<String, Bounds> limits = new HashMap<>();
     private final int OUTSIDE_COLS = 2;
     private final int OUTSIDE_GROUPS = GameConstants.QUEUE_SLOTS;
@@ -43,15 +44,19 @@ public class QueueManager {
         }
     }
 
-    public synchronized PointF giveFreeQueue() {
+    public PointF giveFreeQueue() {
         if (queuePool.isEmpty()) {
             return null;
         }
-        return queuePool.remove(0);
+        synchronized (mutex) {
+            return queuePool.remove(0);
+        }
     }
 
-    public synchronized void returnFreeQueue(PointF pos) {
+    public void returnFreeQueue(PointF pos) {
         if (pos == null || pos.x == 0 || pos.y == 0) return;
-        queuePool.add(pos);
+        synchronized (mutex) {
+            queuePool.add(pos);
+        }
     }
 }

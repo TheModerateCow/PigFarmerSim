@@ -196,9 +196,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
 
         // *** Draw the scoreboard in the top-right corner ***
         int margin = 20;  // Padding from the edge
-        // Using MainActivity.GAME_WIDTH here or you could use c.getWidth()
-        String scoreText = "Score: " + scoreManager.getScore();
-        c.drawText(scoreText, MainActivity.GAME_WIDTH / 2f, 60 + margin, scorePaint);
+        c.drawText("Score: " + scoreManager.getScore(), MainActivity.GAME_WIDTH / 2f, 60 + margin, scorePaint);
 
         // Draw pause icon (two vertical bars)
         float barWidth = 12;
@@ -308,7 +306,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (shouldFlash) {
             scorePaint.setColor(flashOn ? Color.YELLOW : Color.WHITE);
 
-            if (noOfProcesses.size() >= GameConstants.GAME_PANEL_CONSTANTS.MAX_PROCESSES) {
+            if (noOfProcesses.size() >= GameConstants.GROUP_CONSTANTS.MAX_PROCESSES) {
                 c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
             } else if (tableManager.isFull()){
                 c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
@@ -350,7 +348,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        customerManager.customerPool.removeAll(customersToRemove);
+        customerManager.removeCustomers(customersToRemove);
 
         // for max process size flashing
         if (shouldFlash) {
@@ -465,7 +463,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                             flashStartTime = System.currentTimeMillis();
                             flashOn = true; // optional: start with yellow
                             tableManager.signalFull();
-                        } else if (noOfProcesses.size() < GameConstants.GAME_PANEL_CONSTANTS.MAX_PROCESSES) {
+                        } else if (noOfProcesses.size() < GameConstants.GROUP_CONSTANTS.MAX_PROCESSES) {
                             tableManager.giveFreeTables(customer);
                             customer.inQueue = false;
                             noOfProcesses.add(customer);

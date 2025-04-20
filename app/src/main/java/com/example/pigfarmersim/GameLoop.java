@@ -1,6 +1,7 @@
 package com.example.pigfarmersim;
 
 import com.example.pigfarmersim.entities.CustomerThread;
+import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.managers.CustomerManager;
 
 import java.util.List;
@@ -17,16 +18,26 @@ public class GameLoop implements Runnable {
 
     @Override
     public void run() {
+        // limit FPS to maintain game stability
         long lastFPScheck = System.currentTimeMillis();
         int fps = 0;
+        long lastFrame = System.currentTimeMillis();
+        long fpsLimit = 1000/ GameConstants.FPS_LIMIT;
 
         while (running) {
+            while(System.currentTimeMillis() - lastFrame < fpsLimit) {
+                try{
+                    Thread.sleep(10);
+                } catch (InterruptedException ignore) {
+                }
+            }
             gamePanel.update();
             gamePanel.render();
 
             fps++;
 
             long now = System.currentTimeMillis();
+            lastFrame = now;
             if (now - lastFPScheck >= 1000) {
                 // 1005
                 System.out.println("FPS: " + fps + " " + System.currentTimeMillis());

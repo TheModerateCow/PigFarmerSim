@@ -43,6 +43,7 @@ public class TableManager {
             float x = startX + spacingX;
             for (int col = 0; col < cols; col++) {
                 tablePool.add(new PointF(x, y)); // ← save in world coordinates
+                if (tablePool.size() == TOTAL_TABLES) return;
                 x += 8 * Table.TABLE.spriteWidth + spacingX;
             }
             y += 8 * Table.TABLE.spriteHeight + spacingY;
@@ -57,6 +58,7 @@ public class TableManager {
             float x = startX + spacingX;
             for (int col = 0; col < cols; col++) {
                 tablePool.add(new PointF(x, y)); // ← save in world coordinates
+                if (tablePool.size() == TOTAL_TABLES) return;
                 x += 8 * Table.TABLE.spriteWidth + spacingX;
             }
             y += 8 * Table.TABLE.spriteHeight + spacingY;
@@ -67,16 +69,11 @@ public class TableManager {
         List<PointF> tablePoolCopy = new ArrayList<>(tablePool);
 
         for (PointF pos : tablePoolCopy) {
-            if (pos == null || pos.x == 0 || pos.y == 0) continue;
             c.drawBitmap(Table.TABLE.getSprite(), pos.x, pos.y, null);
         }
     }
 
     public void giveFreeTables(CustomerThread group) {
-        if (tablePool.size() < group.groupSize) {
-            return;
-        }
-
         synchronized (mutex) {
             List<PointF> freeTables = new ArrayList<>();
             Iterator<PointF> tableIter = tablePool.iterator();
@@ -84,16 +81,18 @@ public class TableManager {
                 freeTables.add(tableIter.next());
                 tableIter.remove();
             }
-
             group.listPoints = freeTables;
         }
     }
 
     public void returnFreeTables(CustomerThread group) {
+        group.listPoints.removeIf(pos -> pos == null || pos.x == 0 || pos.y == 0);
+
         synchronized (mutex) {
             tablePool.addAll(group.listPoints);
         }
     }
+
     public void signalFull() {
         isFull = true;
     }

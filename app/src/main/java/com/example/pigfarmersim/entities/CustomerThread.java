@@ -68,7 +68,7 @@ public class CustomerThread implements Runnable {
 
     @Override
     public void run() {
-        while (running && (!waitExpire || !jobDone) ) {
+        while (running && !waitExpire && !jobDone ) {
             if (inQueue) {
                 waitingTimeLeft -= System.currentTimeMillis() - spawnTime;
                 spawnTime = System.currentTimeMillis();

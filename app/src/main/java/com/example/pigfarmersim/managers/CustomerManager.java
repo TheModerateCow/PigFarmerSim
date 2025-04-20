@@ -11,6 +11,7 @@ import java.util.Random;
 
 public class CustomerManager implements Runnable{
     private Thread thread = null;
+    private final Object mutex = new Object();
     private final ScoreManager scoreManager;
     public final List<CustomerThread> customerPool = Collections.synchronizedList(new ArrayList<>());
     private boolean running = false;
@@ -32,9 +33,17 @@ public class CustomerManager implements Runnable{
         return customerPool;
     }
 
+    public void removeCustomers(List<CustomerThread> toRemove) {
+        synchronized (mutex) {
+            customerPool.removeAll(toRemove);
+        }
+    }
+
     private void addNewCustomerThread() {
         CustomerThread customer = new CustomerThread(scoreManager);
-        customerPool.add(customer);
+        synchronized (mutex) {
+            customerPool.add(customer);
+        }
         customer.startThread();
     }
 
