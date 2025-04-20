@@ -25,13 +25,10 @@ public class MainPageActivity extends AppCompatActivity {
         Button startGameButton = findViewById(R.id.start_game_button);
 
         // Set click listener for the button
-        startGameButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Start the game activity when button is clicked
-                Intent intent = new Intent(MainPageActivity.this, MainActivity.class);
-                startActivity(intent);
-            }
+        startGameButton.setOnClickListener(v -> {
+            // Start the game activity when button is clicked
+            Intent intent = new Intent(MainPageActivity.this, MainActivity.class);
+            startActivity(intent);
         });
     }
 }
