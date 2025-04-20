@@ -1,24 +1,21 @@
 package com.example.pigfarmersim.environments;
 
-import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.DisplayMetrics;
 
 import com.example.pigfarmersim.MainActivity;
 import com.example.pigfarmersim.R;
-import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.helpers.interfaces.BitmapMethods;
 
 public enum Floor implements BitmapMethods {
 
     OUTSIDE(R.drawable.restaurant);
 
-    private Bitmap background;
-    public int height;
-    public int width;
-    public float sx;
-    public float sy;
+    private final Bitmap background;
+    public final int height;
+    public final int width;
+    public final float sx;
+    public final float sy;
 
     Floor(int resID) {
         // Disable auto-scaling from density
