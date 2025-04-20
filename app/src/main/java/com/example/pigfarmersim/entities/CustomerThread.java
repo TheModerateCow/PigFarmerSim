@@ -29,6 +29,7 @@ public class CustomerThread implements Runnable {
     private final long waitingTime = GameConstants.CUSTOMER_THREAD_CONSTANTS.WAITING_TIME + random.nextInt(10000);
 //            (long) ((GameConstants.CUSTOMER_THREAD_CONSTANTS.WAITING_TIME) * random.nextFloat());
     private long spawnTime;
+    private final Paint timerTextPaint;
     public int waitingTimerColor = Color.WHITE; // exposed for drawing
     public int jobTimerColor = Color.WHITE;
 
@@ -39,6 +40,9 @@ public class CustomerThread implements Runnable {
         }
         this.spawnTime = System.currentTimeMillis();
         this.waitingTimeLeft = waitingTime;
+
+        timerTextPaint = new Paint();
+        timerTextPaint.setTextSize(40);
     }
 
     public PointF getCurrent() {
@@ -49,21 +53,19 @@ public class CustomerThread implements Runnable {
     }
 
     // draw the timer
-    public void drawTimer(Canvas canvas, Paint paint) {
+    public void drawTimer(Canvas canvas) {
         PointF pos = getCurrent();
         if (pos == null) return; // Don't draw if position is not set
-
-        paint.setTextSize(40);
 
         float timeLeftSec;
         if (inQueue) {
             timeLeftSec = Math.max(0, waitingTimeLeft / 1000f);
-            paint.setColor(waitingTimerColor);
+            timerTextPaint.setColor(waitingTimerColor);
         } else {
             timeLeftSec = Math.max(0, (GameConstants.CUSTOMER_THREAD_CONSTANTS.JOB_TIME - (System.currentTimeMillis() - spawnTime)) / 1000f);
-            paint.setColor(jobTimerColor);
+            timerTextPaint.setColor(jobTimerColor);
         }
-        canvas.drawText(String.format(Locale.US, "%.1fs", timeLeftSec), pos.x, pos.y + 110, paint);
+        canvas.drawText(String.format(Locale.US, "%.1fs", timeLeftSec), pos.x, pos.y + 110, timerTextPaint);
     }
 
     @Override

@@ -47,10 +47,12 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final CustomerManager customerManager = new CustomerManager(scoreManager);
     private boolean isPaused = false;
     private final RectF pauseButton;
+    private final Paint pauseTextPaint;
     private final Paint pauseButtonPaint;
     private final Paint pauseIconPaint;
     private final Paint overlayPaint;
     private final Paint menuPaint;
+    private final Paint menuButtonPaint;
     private final Paint buttonPaint;
     private final Paint buttonTextPaint;
     private final RectF resumeButton;
@@ -64,8 +66,8 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
     private final RectF menuButtonRect;
     private final RectF endGameButton;
     private final Paint scorePaint;
+    private final Paint groupTextPaint;
     private final List<CustomerThread> noOfProcesses;
-
     // for max process size flashing
     private boolean shouldFlash = false;
     private long flashStartTime = 0;
@@ -90,6 +92,11 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         pauseButtonPaint.setColor(Color.LTGRAY);
         pauseButtonPaint.setAlpha(180);
 
+        pauseTextPaint = new Paint();
+        pauseTextPaint.setColor(Color.WHITE);
+        pauseTextPaint.setTextSize(70);
+        pauseTextPaint.setTextAlign(Paint.Align.CENTER);
+
         pauseIconPaint = new Paint();
         pauseIconPaint.setColor(Color.WHITE);
         pauseIconPaint.setStyle(Paint.Style.FILL);
@@ -102,6 +109,10 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         menuPaint = new Paint();
         menuPaint.setColor(Color.DKGRAY);
         menuPaint.setAlpha(230);
+
+        menuButtonPaint = new Paint();
+        menuButtonPaint.setColor(Color.LTGRAY);
+        menuButtonPaint.setStyle(Paint.Style.FILL);
 
         buttonPaint = new Paint();
         buttonPaint.setColor(Color.LTGRAY);
@@ -121,6 +132,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
                 centerX + buttonWidth / 2f, centerY - 20);
         quitButton = new RectF(centerX - buttonWidth / 2f, centerY + 20,
                 centerX + buttonWidth / 2f, centerY + buttonHeight + 20);
+        // End screen background rectangle
+        endScreenBgRect = new RectF(centerX - 400, centerY - 300,
+                centerX + 400, centerY + 300);
+        // Menu button rectangle
+        menuButtonRect = new RectF(centerX - 200, centerY + 150,
+                centerX + 200, centerY + 250);
+        endGameButton = new RectF(centerX - buttonWidth / 2f, centerY + buttonHeight + 60,
+                centerX + buttonWidth / 2f, centerY + 2 * buttonHeight + 60);
 
         // Overlay paint (semi-transparent black)
         endOverlayPaint = new Paint();
@@ -138,32 +157,15 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         titleTextPaint.setTextAlign(Paint.Align.CENTER);
         titleTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
-        Paint scoreTextPaint = new Paint();
-        scoreTextPaint.setColor(Color.BLACK);
-        scoreTextPaint.setTextSize(100);
-        scoreTextPaint.setTextAlign(Paint.Align.CENTER);
-        scoreTextPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-
+        groupTextPaint = new Paint();
+        groupTextPaint.setColor(Color.WHITE);
+        groupTextPaint.setTextSize(40);
+        groupTextPaint.setTextAlign(Paint.Align.CENTER);
 
         endButtonTextPaint = new Paint();
         endButtonTextPaint.setColor(Color.BLACK);
         endButtonTextPaint.setTextSize(60);
         endButtonTextPaint.setTextAlign(Paint.Align.CENTER);
-
-        // End screen background rectangle
-        endScreenBgRect = new RectF(
-                centerX - 400, centerY - 300,
-                centerX + 400, centerY + 300
-        );
-
-        // Menu button rectangle
-        menuButtonRect = new RectF(
-                centerX - 200, centerY + 150,
-                centerX + 200, centerY + 250
-        );
-
-        endGameButton = new RectF(centerX - buttonWidth / 2f, centerY + buttonHeight + 60,
-                centerX + buttonWidth / 2f, centerY + 2 * buttonHeight + 60);
 
         //Score pain
         scorePaint = new Paint();
@@ -195,8 +197,7 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         c.drawRoundRect(pauseButton, 10, 10, pauseButtonPaint);
 
         // *** Draw the scoreboard in the top-right corner ***
-        int margin = 20;  // Padding from the edge
-        c.drawText("Score: " + scoreManager.getScore(), MainActivity.GAME_WIDTH / 2f, 60 + margin, scorePaint);
+        c.drawText("Score: " + scoreManager.getScore(), MainActivity.GAME_WIDTH / 2f, 80, scorePaint);
 
         // Draw pause icon (two vertical bars)
         float barWidth = 12;
@@ -220,20 +221,14 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
             RectF menuRect = new RectF(menuLeft, menuTop, menuLeft + menuWidth, menuTop + menuHeight);
             c.drawRoundRect(menuRect, 20, 20, menuPaint);
 
-            // Draw "PAUSED" text
-            Paint titlePaint = new Paint();
-            titlePaint.setColor(Color.WHITE);
-            titlePaint.setTextSize(70);
-            titlePaint.setTextAlign(Paint.Align.CENTER);
-            c.drawText("PAUSED", MainActivity.GAME_WIDTH / 2f, menuTop + 100, titlePaint);
+            c.drawText("PAUSED", MainActivity.GAME_WIDTH / 2f, menuTop + 100, pauseTextPaint);
 
             // Draw buttons
             c.drawRoundRect(resumeButton, 15, 15, buttonPaint);
             c.drawRoundRect(quitButton, 15, 15, buttonPaint);
 
             // Draw button text
-            float textY = resumeButton.centerY() + 15; // Adjust for text vertical centering
-            c.drawText("RESUME", resumeButton.centerX(), textY, buttonTextPaint);
+            c.drawText("RESUME", resumeButton.centerX(), resumeButton.centerY() + 15, buttonTextPaint);
             c.drawText("QUIT", quitButton.centerX(), quitButton.centerY() + 15, buttonTextPaint);
 
             // Add End Game button
@@ -244,75 +239,40 @@ public class GamePanel extends SurfaceView implements SurfaceHolder.Callback {
         if (showEndScreen) {
             // Draw translucent overlay
             c.drawRect(0, 0, MainActivity.GAME_WIDTH, MainActivity.GAME_HEIGHT, endOverlayPaint);
-
             // Draw end screen background
             c.drawRoundRect(endScreenBgRect, 30, 30, endScreenBgPaint);
-
             // Draw title
-            c.drawText("GAME OVER",
-                    (float) MainActivity.GAME_WIDTH / 2,
-                    endScreenBgRect.top + 150,
-                    titleTextPaint);
-
-
+            c.drawText("GAME OVER", MainActivity.GAME_WIDTH / 2f, endScreenBgRect.top + 150, titleTextPaint);
             // Draw menu button
-            Paint buttonPaint = new Paint();
-            buttonPaint.setColor(Color.LTGRAY);
-            buttonPaint.setStyle(Paint.Style.FILL);
-            c.drawRoundRect(menuButtonRect, 20, 20, buttonPaint);
-            c.drawText("MAIN MENU",
-                    menuButtonRect.centerX(),
-                    menuButtonRect.centerY() + 20,
-                    endButtonTextPaint);
+            c.drawRoundRect(menuButtonRect, 20, 20, menuButtonPaint);
+            c.drawText("MAIN MENU", menuButtonRect.centerX(), menuButtonRect.centerY() + 20, endButtonTextPaint);
         }
 
-        // Draw customer groups in a waiting queue near the top
-        Paint groupTextPaint = new Paint();
-        groupTextPaint.setColor(Color.WHITE);
-        groupTextPaint.setTextSize(40);
-        groupTextPaint.setTextAlign(Paint.Align.CENTER);
-
         List<CustomerThread> customersCopy = new ArrayList<>(customerManager.getCustomerGroups());
-
         for (CustomerThread group : customersCopy) {
             if (!group.inQueue) {
-                for (PointF pos : group.listPoints) {
-                    c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
-                }
+                for (PointF pos : group.listPoints) c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
                 continue;
             }
-
-            while (group.queuePoint == null) {
-                group.queuePoint = queueManager.giveFreeQueue();
-            }
-
+            while (group.queuePoint == null) group.queuePoint = queueManager.giveFreeQueue();
             PointF pos = group.queuePoint;
-
             // draw sprite at position
             c.drawBitmap(Customer.CUSTOMER.getSprite(customerDir, customerFrame), pos.x, pos.y, null);
-
             // draw group size above
             c.drawText("x" + group.groupSize, pos.x + 32, pos.y - 10, groupTextPaint);
         }
 
-        // for customer timer
-        Paint timerPaint = new Paint();
-
-        for (CustomerThread group : customersCopy) {
-            group.drawTimer(c, timerPaint);
-        }
+        for (CustomerThread group : customersCopy) group.drawTimer(c);
 
         // for max process size flashing
         if (shouldFlash) {
             scorePaint.setColor(flashOn ? Color.YELLOW : Color.WHITE);
-
             if (noOfProcesses.size() >= GameConstants.GROUP_CONSTANTS.MAX_PROCESSES) {
                 c.drawText("Maximum number of customers served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
             } else if (tableManager.isFull()){
                 c.drawText("Maximum number of tables served", MainActivity.GAME_WIDTH / 2f, MainActivity.GAME_HEIGHT / 2f, scorePaint);
             }
         }
-
         holder.unlockCanvasAndPost(c);
     }
 

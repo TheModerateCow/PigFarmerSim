@@ -103,7 +103,7 @@ public class TableManager {
         isFull = true;
     }
     public boolean isFull() {
-        if (isFull) { acknowledgeFull(); }
+        if (isFull) { acknowledgeFull(); return true; }
         return false;
     }
     private void acknowledgeFull() {
