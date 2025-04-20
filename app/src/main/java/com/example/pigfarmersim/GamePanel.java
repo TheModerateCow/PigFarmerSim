@@ -18,11 +18,11 @@ import androidx.annotation.NonNull;
 import com.example.pigfarmersim.entities.Customer;
 import com.example.pigfarmersim.entities.CustomerThread;
 import com.example.pigfarmersim.environments.MapLoader;
+import com.example.pigfarmersim.helpers.GameConstants;
 import com.example.pigfarmersim.managers.CustomerManager;
 import com.example.pigfarmersim.managers.QueueManager;
 import com.example.pigfarmersim.managers.ScoreManager;
 import com.example.pigfarmersim.managers.TableManager;
-import com.example.pigfarmersim.helpers.GameConstants;
 
 import java.util.ArrayList;
 import java.util.Iterator;

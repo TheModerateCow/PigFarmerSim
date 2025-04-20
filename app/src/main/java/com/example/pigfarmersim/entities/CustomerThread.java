@@ -10,8 +10,8 @@ import com.example.pigfarmersim.managers.ScoreManager;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.Locale;
+import java.util.Random;
 
 public class CustomerThread implements Runnable {
     private Thread thread = null;
