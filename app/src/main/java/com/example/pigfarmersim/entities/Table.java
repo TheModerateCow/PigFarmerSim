@@ -24,7 +24,7 @@ public enum Table implements BitmapMethods {
         spriteWidth = spriteSheet.getWidth();
         spriteHeight = spriteSheet.getHeight();
 
-        // Create bitmap from the entire spritesheet
+        // Create bitmap from the entire sprite sheet
         sprite = BitmapMethods.getScaledCharacterBitmap(
                 Bitmap.createBitmap(spriteSheet, 0, 0, spriteWidth, spriteHeight));
     }

@@ -1,42 +1,39 @@
 package com.example.pigfarmersim;
 
 import android.content.Context;
-import android.os.Bundle;
-import android.util.DisplayMetrics;
-import android.view.View;
-import android.view.WindowManager;
 import android.content.Intent;
-
+import android.graphics.Rect;
+import android.os.Bundle;
+import android.view.WindowManager;
+import android.view.WindowMetrics;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static Context gameContext;
     private static GamePanel gamePanel;
     public static int GAME_WIDTH, GAME_HEIGHT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        gameContext = this;
 
-        DisplayMetrics dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getRealMetrics(dm);
+        WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
+        Rect bounds = windowMetrics.getBounds();
+        GAME_WIDTH = bounds.width();
+        GAME_HEIGHT = bounds.height();
 
-        GAME_WIDTH = dm.widthPixels;
-        GAME_HEIGHT = dm.heightPixels;
+        // Make the activity fullscreen using modern WindowInsets API
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(),
+                getWindow().getDecorView());
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
 
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_FULLSCREEN |
-                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
-                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
-                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-
-        getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-
-        System.out.println("Width: " + dm.widthPixels + "  Height: " + dm.heightPixels);
+        getWindow()
+                .getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
 
         setContentView(new GamePanel(this));
     }
@@ -54,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainPageActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Clear the activity stack
         startActivity(intent);
-        finish();  // This will close the current activity
+        finish(); // This will close the current activity
     }
 
     @Override
@@ -63,9 +60,11 @@ public class MainActivity extends AppCompatActivity {
         if (gamePanel != null) {
             gamePanel.setPaused(true);
         }
-        // Any other cleanup
+        // Clear static GamePanel reference to prevent memory leaks
+        gamePanel = null;
     }
+
     public static Context getGameContext() {
-        return gameContext;
+        return PigFarmerApplication.getAppContext();
     }
 }

@@ -2,7 +2,6 @@ package com.example.pigfarmersim;
 
 import com.example.pigfarmersim.helpers.GameConstants;
 
-
 public class GameLoop implements Runnable {
     private Thread gameThread;
     private final GamePanel gamePanel;
@@ -19,11 +18,11 @@ public class GameLoop implements Runnable {
         long lastFPScheck = System.currentTimeMillis();
         int fps = 0;
         long lastFrame = System.currentTimeMillis();
-        long fpsLimit = 1000/ GameConstants.FPS_LIMIT;
+        long fpsLimit = 1000 / GameConstants.FPS_LIMIT;
 
         while (running) {
-            if(System.currentTimeMillis() - lastFrame < fpsLimit) {
-                try{
+            if (System.currentTimeMillis() - lastFrame < fpsLimit) {
+                try {
                     Thread.sleep(fpsLimit - (System.currentTimeMillis() - lastFrame));
                 } catch (InterruptedException ignore) {
                 }
@@ -36,7 +35,6 @@ public class GameLoop implements Runnable {
             long now = System.currentTimeMillis();
             lastFrame = now;
             if (now - lastFPScheck >= 1000) {
-                // 1005
                 System.out.println("FPS: " + fps + " " + System.currentTimeMillis());
                 fps = 0;
                 lastFPScheck += 1000;
@@ -56,7 +54,8 @@ public class GameLoop implements Runnable {
         running = false;
         // Wait for the thread to finish
         try {
-            if (gameThread != null) gameThread.join();
+            if (gameThread != null)
+                gameThread.join();
         } catch (InterruptedException ignore) {
         }
     }
